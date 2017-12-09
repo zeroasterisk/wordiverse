@@ -1,4 +1,8 @@
 defmodule Wordiverse.Game.Tile do
+  @moduledoc """
+  A single tile, must know it's Letter and it's Value
+  NOTE: a blank or joker has a letter of "?" and value of 0
+  """
   defstruct [
     letter: nil,
     value: 1,
@@ -10,7 +14,6 @@ defmodule Wordiverse.Game.Tiles do
   This is our Wordiverse Game Tiles
   The configuration of all avaialable tiles.
   """
-  alias Wordiverse.Game.Tile
 
   @doc """
   create tiles (based on game type)
@@ -80,7 +83,7 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
     Enum.reverse(list)
   end
 
-  def add(tiles, letter, value, _count = 0), do: tiles
+  def add(tiles, _letter, _value, _count = 0), do: tiles
   def add(tiles, letter, value, count) do
     [
       %Wordiverse.Game.Tile{letter: letter, value: value}

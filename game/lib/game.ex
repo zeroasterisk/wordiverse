@@ -16,6 +16,14 @@ defmodule Wordiverse.Game do
   Therefore the create_game and dictionary and rules are all
   keyed into game_type.
   """
+  alias Wordiverse.Game.Tile
+
+  defstruct [
+    board: nil,
+    tiles: nil,
+    player_1: nil,
+    player_2: nil,
+  ]
 
   @doc """
   Hello world.
