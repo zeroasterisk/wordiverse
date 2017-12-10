@@ -1,4 +1,4 @@
-defmodule Wordiverse.Game.Tile do
+defmodule Wordiverse.GameTile do
   @moduledoc """
   A single tile, must know it's Letter and it's Value
   NOTE: a blank or joker has a letter of "?" and value of 0
@@ -9,9 +9,9 @@ defmodule Wordiverse.Game.Tile do
   ]
 end
 
-defmodule Wordiverse.Game.Tiles do
+defmodule Wordiverse.GameTiles do
   @moduledoc """
-  This is our Wordiverse Game Tiles
+  This is our Wordiverse GameTiles
   The configuration of all avaialable tiles.
   """
 
@@ -20,7 +20,7 @@ defmodule Wordiverse.Game.Tiles do
 
 http://www.wordfeudrules.com/WordfeudRulePage.aspx
   """
-  def create_list(:wordfeud) do
+  def create(:wordfeud) do
     list = []
     list = add(list, "a", 1, 10)
     list = add(list, "b", 4, 2)
@@ -51,7 +51,7 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
     list = add(list, "?", 0, 2)
     Enum.reverse(list)
   end
-  def create_list(:scrabble) do
+  def create(:scrabble) do
     list = []
     list = add(list, "a", 1, 9)
     list = add(list, "b", 3, 2)
@@ -86,7 +86,7 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
   def add(tiles, _letter, _value, _count = 0), do: tiles
   def add(tiles, letter, value, count) do
     [
-      %Wordiverse.Game.Tile{letter: letter, value: value}
+      %Wordiverse.GameTile{letter: letter, value: value}
       |
       add(tiles, letter, value, (count - 1))
     ]
@@ -94,8 +94,58 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
 
   @doc """
   get random tiles until the player has 7
+
+  ## Examples
+
+      iex> Wordiverse.GameTiles.take_random([1, 1, 1, 1, 1, 1, 1], 2)
+      {[1, 1], [1, 1, 1, 1, 1]}
   """
-  def get(tiles, count \\ 1) do
+  def take_random(tiles, count \\ 1) when is_list(tiles) and count > 0 do
+    total = Enum.count(tiles)
+    [in_pile, in_hand] = tiles |> Enum.shuffle() |> Enum.chunk_every(total - count)
+    {in_hand, in_pile}
+  end
+
+  @doc """
+  get a set of tiles from another set, only if all are available
+
+  ## Examples
+
+      iex> word = ["a", "l"]
+      iex> tray = ["a", "l", "b", "d", "n", "l"]
+      iex> Wordiverse.GameTiles.take_from_tray(tray, word)
+      {["a", "l"], ["b", "d", "n", "l"]}
+
+      iex> word = ["a", "l", "l"]
+      iex> tray = ["a", "l", "b", "d", "n", "l"]
+      iex> Wordiverse.GameTiles.take_from_tray(tray, word)
+      {["a", "l", "l"], ["b", "d", "n"]}
+
+      iex> word = ["a", "l", "a", "n"]
+      iex> tray = ["a", "l", "b", "d", "n", "l"]
+      iex> Wordiverse.GameTiles.take_from_tray(tray, word)
+      {[], ["a", "l", "b", "d", "n", "l"]}
+
+  """
+  def take_from_tray(tray, word) when is_list(tray) and is_list(word) do
+    {status, word_taken, tray_left} = take_from_tray([], tray, word)
+    case status do
+      :ok -> {word_taken, tray_left}
+      :error -> {[], tray}
+    end
+  end
+  def take_from_tray(word_taken, tray, [] = _word_left) do
+    {:ok, Enum.reverse(word_taken), tray}
+  end
+  def take_from_tray(word_taken, tray, [letter | word_left]) do
+    case Enum.member?(tray, letter) do
+      true -> take_from_tray(
+        [letter | word_taken],
+        List.delete(tray, letter),
+        word_left
+      )
+      false -> {:error, [], []}
+    end
   end
 
 end

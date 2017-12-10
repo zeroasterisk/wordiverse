@@ -1,9 +1,9 @@
 defmodule GameBoardTest do
   use ExUnit.Case
-  doctest Wordiverse.Game.Board
+  doctest Wordiverse.GameBoard
 
   test "create board for scrabble" do
-    board = Wordiverse.Game.Board.create(:scrabble)
+    board = Wordiverse.GameBoard.create(:scrabble)
     assert board |> Map.keys() |> Enum.count() == 15
     assert board[0] |> Map.keys() |> Enum.count() == 15
     assert board[0][0] == %{
@@ -22,7 +22,7 @@ defmodule GameBoardTest do
       bonus: :tw,
       letter: nil,
     }
-    bonus_matrix = board |> Wordiverse.Game.Board.to_list(:bonus)
+    bonus_matrix = board |> Wordiverse.GameBoard.to_list(:bonus)
     assert bonus_matrix == [
       [:tw, nil, nil, :dl, nil, nil, nil, :tw, nil, nil, nil, :dl, nil, nil, :tw],
       [nil, :dw, nil, nil, nil, :tl, nil, nil, nil, :tl, nil, nil, nil, :dw, nil],
@@ -42,7 +42,7 @@ defmodule GameBoardTest do
     ]
   end
   test "create board for wordfeud" do
-    board = Wordiverse.Game.Board.create(:wordfeud)
+    board = Wordiverse.GameBoard.create(:wordfeud)
     assert board |> Map.keys() |> Enum.count() == 15
     assert board[0] |> Map.keys() |> Enum.count() == 15
     assert board[0][0] == %{
@@ -61,7 +61,7 @@ defmodule GameBoardTest do
       bonus: :tl,
       letter: nil,
     }
-    bonus_matrix = board |> Wordiverse.Game.Board.to_list(:bonus)
+    bonus_matrix = board |> Wordiverse.GameBoard.to_list(:bonus)
     assert bonus_matrix == [
       [:tl, nil, nil, nil, :tw, nil, nil, :dl, nil, nil, :tw, nil, nil, nil, :tl],
       [nil, :dl, nil, nil, nil, :tl, nil, nil, nil, :tl, nil, nil, nil, :dl, nil],
@@ -81,7 +81,7 @@ defmodule GameBoardTest do
     ]
   end
   test "create board row for a given length of columns" do
-    assert Wordiverse.Game.Board.create_board_row(4) == %{
+    assert Wordiverse.GameBoard.create_board_row(4) == %{
       0 => %{bonus: nil, letter: nil},
       1 => %{bonus: nil, letter: nil},
       2 => %{bonus: nil, letter: nil},
@@ -89,7 +89,7 @@ defmodule GameBoardTest do
     }
   end
   test "create board for a given length of columns and rows" do
-    assert Wordiverse.Game.Board.create_board(2, 2) == %{
+    assert Wordiverse.GameBoard.create_board(2, 2) == %{
       0 => %{
         0 => %{bonus: nil, letter: nil},
         1 => %{bonus: nil, letter: nil},

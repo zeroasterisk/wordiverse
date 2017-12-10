@@ -16,25 +16,70 @@ defmodule Wordiverse.Game do
   Therefore the create_game and dictionary and rules are all
   keyed into game_type.
   """
-  alias Wordiverse.Game.Tile
+  use GenServer
 
   defstruct [
+    type: nil,
     board: nil,
-    tiles: nil,
+    tiles_in_pile: nil,
     player_1: nil,
     player_2: nil,
+    turn: 1,
+    score: 0,
+    plays: [],
   ]
 
+  ### Client API
   @doc """
-  Hello world.
+  Easy access to start up the server
 
-  ## Examples
+  On new:
+    returns {:ok, pid}
+  On repeat:
+    returns {:error, {:already_started, #PID<0.248.0>}}
+  """
+  def start_link(type, player_1_id, player_2_id) do
+    GenServer.start_link(
+      __MODULE__,
+      [type, player_1_id, player_2_id],
+      [
+        name: type,
+        timeout: 30_000, # 30 seconds to init or die
+      ]
+    )
+  end
+  def get(pid, key \\ :board) do
+    GenServer.call(pid, {:get, key})
+  end
 
-      iex> Wordiverse.Game.hello
-      :world
+  ### Server API
+
+  @doc """
 
   """
-  def hello do
-    :world
+  def init([type, player_1_id, player_2_id]) do
+    allowed = [:scrabble, :wordfeud, :mock]
+    case Enum.member?(allowed, type) do
+      true -> {:ok, Wordiverse.GameActions.create(type, player_1_id, player_2_id)}
+      false -> {:error, "Invalid type supplied to Game init #{type}"}
+    end
   end
+  def handle_call({:get, :full}, _from, state) do
+    {:reply, state, state}
+  end
+  def handle_call({:get, :player_1}, _from, state) do
+    {:reply, Map.get(state, :player_1), state}
+  end
+  def handle_call({:get, :player_2}, _from, state) do
+    {:reply, Map.get(state, :player_2), state}
+  end
+  def handle_call({:get, :board}, _from, state) do
+    {:reply, Map.get(state, :board), state}
+  end
+  def handle_call({:get, :tiles}, _from, state) do
+    {:reply, Map.get(state, :tiles_in_pile), state}
+  end
+
+
+
 end

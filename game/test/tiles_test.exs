@@ -1,25 +1,25 @@
 defmodule GameTilesTest do
   use ExUnit.Case
-  doctest Wordiverse.Game.Tiles
+  doctest Wordiverse.GameTiles
 
   test "add a single tile to a list" do
-    assert Wordiverse.Game.Tiles.add([], "a", 1, 1) == [
-      %Wordiverse.Game.Tile{letter: "a", value: 1}
+    assert Wordiverse.GameTiles.add([], "a", 1, 1) == [
+      %Wordiverse.GameTile{letter: "a", value: 1}
     ]
   end
   test "add multiple tiles to a list" do
-    assert Wordiverse.Game.Tiles.add([], "b", 2, 3) == [
-      %Wordiverse.Game.Tile{letter: "b", value: 2},
-      %Wordiverse.Game.Tile{letter: "b", value: 2},
-      %Wordiverse.Game.Tile{letter: "b", value: 2}
+    assert Wordiverse.GameTiles.add([], "b", 2, 3) == [
+      %Wordiverse.GameTile{letter: "b", value: 2},
+      %Wordiverse.GameTile{letter: "b", value: 2},
+      %Wordiverse.GameTile{letter: "b", value: 2}
     ]
   end
   test "create a list of tiles for :wordfeud" do
-    tiles = Wordiverse.Game.Tiles.create_list(:wordfeud)
+    tiles = Wordiverse.GameTiles.create(:wordfeud)
     distro = tiles
     |> Enum.group_by(
-      fn(%Wordiverse.Game.Tile{letter: l}) -> l end,
-      fn(%Wordiverse.Game.Tile{value: p}) -> p end
+      fn(%Wordiverse.GameTile{letter: l}) -> l end,
+      fn(%Wordiverse.GameTile{value: p}) -> p end
     )
     |> Enum.map(fn({k, v}) -> {k, Enum.count(v)} end)
     assert distro == [
@@ -29,23 +29,23 @@ defmodule GameTilesTest do
       {"w", 2}, {"x", 1}, {"y", 2}, {"z", 1}
     ]
     assert tiles
-    |> Enum.map(fn(%Wordiverse.Game.Tile{value: v}) -> v end)
+    |> Enum.map(fn(%Wordiverse.GameTile{value: v}) -> v end)
     |> Enum.sum() == 206
     assert Enum.count(tiles) == 104
-    assert Enum.at(tiles, 0) == %Wordiverse.Game.Tile{letter: "a", value: 1}
-    assert Enum.at(tiles, 9) == %Wordiverse.Game.Tile{letter: "a", value: 1}
-    assert Enum.at(tiles, 10) == %Wordiverse.Game.Tile{letter: "b", value: 4}
-    assert Enum.at(tiles, 11) == %Wordiverse.Game.Tile{letter: "b", value: 4}
-    assert Enum.at(tiles, 12) == %Wordiverse.Game.Tile{letter: "c", value: 4}
-    assert Enum.at(tiles, 103) == %Wordiverse.Game.Tile{letter: "?", value: 0}
+    assert Enum.at(tiles, 0) == %Wordiverse.GameTile{letter: "a", value: 1}
+    assert Enum.at(tiles, 9) == %Wordiverse.GameTile{letter: "a", value: 1}
+    assert Enum.at(tiles, 10) == %Wordiverse.GameTile{letter: "b", value: 4}
+    assert Enum.at(tiles, 11) == %Wordiverse.GameTile{letter: "b", value: 4}
+    assert Enum.at(tiles, 12) == %Wordiverse.GameTile{letter: "c", value: 4}
+    assert Enum.at(tiles, 103) == %Wordiverse.GameTile{letter: "?", value: 0}
   end
   test "create a list of tiles for :scrabble" do
-    tiles = Wordiverse.Game.Tiles.create_list(:scrabble)
+    tiles = Wordiverse.GameTiles.create(:scrabble)
 
     distro = tiles
     |> Enum.group_by(
-      fn(%Wordiverse.Game.Tile{letter: l}) -> l end,
-      fn(%Wordiverse.Game.Tile{value: p}) -> p end
+      fn(%Wordiverse.GameTile{letter: l}) -> l end,
+      fn(%Wordiverse.GameTile{value: p}) -> p end
     )
     |> Enum.map(fn({k, v}) -> {k, Enum.count(v)} end)
     assert distro == [
@@ -55,14 +55,14 @@ defmodule GameTilesTest do
       {"w", 2}, {"x", 1}, {"y", 2}, {"z", 1}
     ]
     assert tiles
-    |> Enum.map(fn(%Wordiverse.Game.Tile{value: v}) -> v end)
+    |> Enum.map(fn(%Wordiverse.GameTile{value: v}) -> v end)
     |> Enum.sum() == 187
     assert Enum.count(tiles) == 100
-    assert Enum.at(tiles, 0) == %Wordiverse.Game.Tile{letter: "a", value: 1}
-    assert Enum.at(tiles, 8) == %Wordiverse.Game.Tile{letter: "a", value: 1}
-    assert Enum.at(tiles, 9) == %Wordiverse.Game.Tile{letter: "b", value: 3}
-    assert Enum.at(tiles, 10) == %Wordiverse.Game.Tile{letter: "b", value: 3}
-    assert Enum.at(tiles, 11) == %Wordiverse.Game.Tile{letter: "c", value: 3}
-    assert Enum.at(tiles, 99) == %Wordiverse.Game.Tile{letter: "?", value: 0}
+    assert Enum.at(tiles, 0) == %Wordiverse.GameTile{letter: "a", value: 1}
+    assert Enum.at(tiles, 8) == %Wordiverse.GameTile{letter: "a", value: 1}
+    assert Enum.at(tiles, 9) == %Wordiverse.GameTile{letter: "b", value: 3}
+    assert Enum.at(tiles, 10) == %Wordiverse.GameTile{letter: "b", value: 3}
+    assert Enum.at(tiles, 11) == %Wordiverse.GameTile{letter: "c", value: 3}
+    assert Enum.at(tiles, 99) == %Wordiverse.GameTile{letter: "?", value: 0}
   end
 end

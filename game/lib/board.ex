@@ -1,6 +1,6 @@
-defmodule Wordiverse.Game.Board do
+defmodule Wordiverse.GameBoard do
   @moduledoc """
-  This is our Wordiverse Game Board
+  This is our Wordiverse GameBoard
   The configuration of all board positions.
   The configuration of all current played tiles on the board.
 
@@ -79,6 +79,16 @@ defmodule Wordiverse.Game.Board do
       [6, 4],
       [7, 0],
     ], :dl)
+    |> add_bonus_mirror()
+  end
+  def create(:mock) do
+    board = create_board(5, 5)
+    board
+    |> add_bonus_bulk([[3, 3]], :st)
+    |> add_bonus_bulk([[0, 0]], :tw)
+    |> add_bonus_bulk([[1, 1]], :dw)
+    |> add_bonus_bulk([[2, 2]], :tl)
+    |> add_bonus_bulk([[0, 3], [3, 0]], :dl)
     |> add_bonus_mirror()
   end
 
