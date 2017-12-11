@@ -82,6 +82,13 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
     list = add(list, "?", 0, 2)
     Enum.reverse(list)
   end
+  def create(:mock) do
+    list = []
+    list = add(list, "a", 1, 10)
+    list = add(list, "l", 1, 10)
+    list = add(list, "n", 1, 10)
+    Enum.reverse(list)
+  end
 
   def add(tiles, _letter, _value, _count = 0), do: tiles
   def add(tiles, letter, value, count) do
