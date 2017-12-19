@@ -90,7 +90,7 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
     Enum.reverse(list)
   end
 
-  def add(tiles, _letter, _value, _count = 0), do: tiles
+  def add(tiles, _letter, _value, 0 = _count), do: tiles
   def add(tiles, letter, value, count) do
     [
       %Wordiverse.GameTile{letter: letter, value: value}

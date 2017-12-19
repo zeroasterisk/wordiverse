@@ -22,18 +22,19 @@ defmodule GamePlayTest do
     defp get_errors(%GamePlay{errors: errors}), do: errors
 
     setup do
+      Wordiverse.Dictionary.start_link(:mock)
       game = Wordiverse.GameActions.create(:mock, :player_1, :player_2)
       tray = []
-            |> Wordiverse.GameTiles.add("a", 1, 2)
-            |> Wordiverse.GameTiles.add("l", 1, 2)
-            |> Wordiverse.GameTiles.add("n", 1, 2)
-            |> Wordiverse.GameTiles.add("d", 1, 1)
+            |> Wordiverse.GameTiles.add("A", 1, 2)
+            |> Wordiverse.GameTiles.add("L", 1, 2)
+            |> Wordiverse.GameTiles.add("N", 1, 2)
+            |> Wordiverse.GameTiles.add("D", 1, 1)
       player = Map.merge(game.player_1, %{tiles_in_tray: tray})
       game = Map.put(game, :player_1, player)
       word = [
-        ["a", 0, 2],
-        ["l", 1, 2],
-        ["l", 2, 2],
+        ["A", 0, 2],
+        ["L", 1, 2],
+        ["L", 2, 2],
       ]
       play = GamePlay.create(:player_1, word)
       {:ok, play: play, game: game, player: player}
@@ -43,7 +44,7 @@ defmodule GamePlayTest do
       play = GamePlay.verify(state[:play], state[:game])
       assert play.valid == true
       assert play.errors == []
-      assert play.letters_in_tray_after_play == ["d", "n", "n", "a"]
+      assert play.letters_in_tray_after_play == ["D", "N", "N", "A"]
     end
 
     test "verify_letters_are_valid (good)", state do
@@ -67,7 +68,7 @@ defmodule GamePlayTest do
       ) == ["You have played invalid letters"]
     end
     test "verify_letters_are_valid (bad: non-numeric x/y)", state do
-      play = Map.merge(state[:play], %{letters_yx: [["a", 0.5, 0.5]]})
+      play = Map.merge(state[:play], %{letters_yx: [["A", 0.5, 0.5]]})
       assert get_errors(
         GamePlay.verify_letters_are_valid(play)
       ) == ["You have played invalid letters"]
@@ -81,7 +82,7 @@ defmodule GamePlayTest do
       ) == []
     end
     test "verify_letters_are_single_direction (bad: diagonal)", state do
-      play = Map.merge(state[:play], %{letters_yx: [["a", 0, 0], ["l", 1, 1]]})
+      play = Map.merge(state[:play], %{letters_yx: [["A", 0, 0], ["L", 1, 1]]})
       assert get_errors(
         GamePlay.verify_letters_are_single_direction(play)
       ) == ["You must play all tiles in a single row or column"]
@@ -95,10 +96,10 @@ defmodule GamePlayTest do
     test "verify_letters_in_tray (good)", state do
       play = GamePlay.verify_letters_in_tray(state[:play], state[:game])
       assert get_errors(play) == []
-      assert play.letters_in_tray_after_play == ["d", "n", "n", "a"]
+      assert play.letters_in_tray_after_play == ["D", "N", "N", "A"]
     end
     test "verify_letters_in_tray (bad)", state do
-      play = Map.merge(state[:play], %{letters_yx: [["n", 0, 0], ["o", 0, 1]]})
+      play = Map.merge(state[:play], %{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
       assert get_errors(
         GamePlay.verify_letters_in_tray(play, state[:game])
       ) == ["Tiles not in your tray"]
@@ -116,9 +117,9 @@ defmodule GamePlayTest do
     end
     test "verify_letters_do_not_overlap (good - no overlap)", state do
       board = Map.get(state[:game], :board)
-              |> put_in([0, 1, :letter], "a") # <-- next to played letters
-              |> put_in([1, 1, :letter], "a")
-              |> put_in([2, 1, :letter], "a")
+              |> put_in([0, 1, :letter], "A") # <-- next to played letters
+              |> put_in([1, 1, :letter], "A")
+              |> put_in([2, 1, :letter], "A")
       game = Map.merge(state[:game], %{board: board})
       assert get_errors(
         GamePlay.verify_letters_do_not_overlap(state[:play], game)
@@ -126,7 +127,7 @@ defmodule GamePlayTest do
     end
     test "verify_letters_do_not_overlap (bad has overlap)", state do
       board = Map.get(state[:game], :board)
-              |> put_in([2, 2, :letter], "a") # <-- center square only
+              |> put_in([2, 2, :letter], "A") # <-- center square only
       game = Map.merge(state[:game], %{board: board})
       assert get_errors(
         GamePlay.verify_letters_do_not_overlap(state[:play], game)
@@ -139,7 +140,7 @@ defmodule GamePlayTest do
     end
     test "verify_letters_touch (good - adjacent play)", state do
       board = Map.get(state[:game], :board)
-              |> put_in([0, 1, :letter], "a") # <-- next to played letters
+              |> put_in([0, 1, :letter], "A") # <-- next to played letters
       game = Map.merge(state[:game], %{board: board})
       assert get_errors(
         GamePlay.verify_letters_touch(state[:play], game)
@@ -147,7 +148,7 @@ defmodule GamePlayTest do
     end
     test "verify_letters_touch (bad no next-tile)", state do
       board = Map.get(state[:game], :board)
-              |> put_in([0, 0, :letter], "a") # <-- top-left, not touching anything
+              |> put_in([0, 0, :letter], "A") # <-- top-left, not touching anything
       game = Map.merge(state[:game], %{board: board})
       assert get_errors(
         GamePlay.verify_letters_touch(state[:play], game)
@@ -158,21 +159,67 @@ defmodule GamePlayTest do
       assert get_errors(play) == []
     end
     test "verify_letters_cover_start (good - not first word, ignored)", state do
-      play = Map.merge(state[:play], %{letters_yx: [["n", 0, 0], ["o", 0, 1]]})
+      play = Map.merge(state[:play], %{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
       board = Map.get(state[:game], :board)
-              |> put_in([4, 4, :letter], "a") # <-- bottom-right, not touching anything
+              |> put_in([4, 4, :letter], "A") # <-- bottom-right, not touching anything
       game = Map.merge(state[:game], %{board: board})
       assert get_errors(
         GamePlay.verify_letters_cover_start(play, game)
       ) == []
     end
     test "verify_letters_cover_start (bad not covering center, not first word)", state do
-      play = Map.merge(state[:play], %{letters_yx: [["n", 0, 0], ["o", 0, 1]]})
+      play = Map.merge(state[:play], %{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
       board = Map.get(state[:game], :board)
       game = Map.merge(state[:game], %{board: board})
       assert get_errors(
         GamePlay.verify_letters_cover_start(play, game)
       ) == ["Tiles must cover the center square to start"]
+    end
+    test "verify_letters_form_full_words (good - new=only word)", state do
+      assert get_errors(
+        GamePlay.verify_letters_form_full_words(state[:play], state[:game])
+      ) == []
+    end
+    test "verify_letters_form_full_words (good - all valid words)", state do
+      play = Map.merge(state[:play], %{letters_yx: [
+        ["A", 0, 2],
+        ["L", 1, 2],
+        ["A", 2, 2],
+        ["N", 3, 2],
+      ]})
+      board = Map.get(state[:game], :board)
+              |> put_in([1, 0, :letter], "A")
+              |> put_in([1, 1, :letter], "L")
+      game = Map.merge(state[:game], %{board: board})
+      assert get_errors(
+        GamePlay.verify_letters_form_full_words(play, game)
+      ) == []
+    end
+    test "verify_letters_form_full_words (bad - several invalid words)", state do
+      play = Map.merge(state[:play], %{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
+      board = Map.get(state[:game], :board)
+              |> put_in([1, 0, :letter], "A")
+              |> put_in([1, 1, :letter], "L")
+      game = Map.merge(state[:game], %{board: board})
+      assert get_errors(
+        GamePlay.verify_letters_form_full_words(play, game)
+      ) == ["Not In Dictionary, unknown words: NA, OL, NO"]
+    end
+    test "verify_letters_form_full_words (bad - single invalid word)", state do
+      play = Map.merge(state[:play], %{letters_yx: [
+        ["A", 0, 2],
+        ["L", 1, 2],
+        ["A", 2, 2],
+        ["N", 3, 2],
+        ["J", 4, 2],
+      ]})
+      board = Map.get(state[:game], :board)
+              |> put_in([1, 0, :letter], "A")
+              |> put_in([1, 1, :letter], "L")
+      game = Map.merge(state[:game], %{board: board})
+      assert get_errors(
+        GamePlay.verify_letters_form_full_words(play, game)
+      ) == ["Not In Dictionary, unknown word: ALANJ"]
     end
 
   end

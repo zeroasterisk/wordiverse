@@ -45,6 +45,7 @@ defmodule Wordiverse.GamePlay do
     |> verify_letters_do_not_overlap(game)
     |> verify_letters_touch(game)
     |> verify_letters_cover_start(game)
+    |> verify_letters_form_full_words(game)
     # final verification
     |> verify_no_errors()
   end
@@ -147,7 +148,7 @@ defmodule Wordiverse.GamePlay do
     %Wordiverse.Game{} = game
   ) do
     player = Map.get(game, player_key)
-    letters_in_tray = Map.get(player, :tiles_in_tray) |> Enum.map(fn(t) -> t.letter end)
+    letters_in_tray = player |> Map.get(:tiles_in_tray) |> Enum.map(fn(t) -> t.letter end)
     letters_in_play = letters_yx |> Enum.map(fn([letter, _, _]) -> letter end)
     # TODO account for "?"
     {tiles_playable, tray} = Wordiverse.GameTiles.take_from_tray(
@@ -192,11 +193,7 @@ defmodule Wordiverse.GamePlay do
     case Wordiverse.GameBoard.empty?(board) do
       true -> play
       false ->
-        # find first instance where any played position, has a non-nil in an adjacent tile
-        case letters_yx
-        |> Enum.any?(fn([_, y, x]) ->
-          Wordiverse.GameBoard.touching(board, y, x) |> Enum.any?(fn(%{letter: letter}) -> is_bitstring(letter) end)
-        end) do
+        case any_letters_xy_touching?(board, letters_yx) do
           true -> play
           false ->
             Map.merge(play, %{errors: ["Tiles must touch an existing tile"]})
@@ -204,6 +201,17 @@ defmodule Wordiverse.GamePlay do
     end
   end
   def verify_letters_touch(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
+
+  defp any_letters_xy_touching?(board, letters_yx) do
+    letters_yx
+    |> Enum.any?(
+      fn([_, y, x]) ->
+        board
+        |> Wordiverse.GameBoardGet.touching(y, x)
+        |> Enum.any?(fn(%{letter: letter}) -> is_bitstring(letter) end)
+      end
+    )
+  end
 
   @doc """
   Verify a play does cover the center square
@@ -217,8 +225,7 @@ defmodule Wordiverse.GamePlay do
       false -> play
       true ->
         # ensure the center cell is in the play
-        {_total_y, _total_x, center_y, center_x} = Wordiverse.GameBoard.measure(board)
-        case letters_yx |> Enum.any?(fn([_, y, x]) -> y == center_y and x == center_x end) do
+        case any_letters_xy_on_center?(board, letters_yx) do
           true -> play
           false ->
             Map.merge(play, %{errors: ["Tiles must cover the center square to start"]})
@@ -227,7 +234,80 @@ defmodule Wordiverse.GamePlay do
   end
   def verify_letters_cover_start(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
 
+  defp any_letters_xy_on_center?(board, letters_yx) do
+    {_total_y, _total_x, center_y, center_x} = Wordiverse.GameBoard.measure(board)
+    letters_yx
+    |> Enum.any?(
+      fn([_, y, x]) -> y == center_y and x == center_x end
+    )
+  end
 
+
+  @doc """
+  This verifies all "words" formed with the new letters
+  are full words (uses the Dictionary for the type of game = GenServer)
+  """
+  def verify_letters_form_full_words(
+    %Wordiverse.GamePlay{letters_yx: letters_yx, errors: []} = play,
+    %Wordiverse.Game{board: board} = game
+  ) do
+    # get all words for all letters
+    # ensure all words are full words
+    board_next = board |> Wordiverse.GameBoard.add_letters_xy(letters_yx)
+    words = Wordiverse.GameBoardGet.touching_words(board_next, letters_yx)
+    words_invalid = Enum.filter(words, fn(word) -> !verify_word_full(game, word) end)
+    case Enum.count(words_invalid) do
+      0 -> play
+      1 ->
+        Map.merge(play, %{errors: ["Not In Dictionary, unknown word: #{simplify_words(words_invalid)}"]})
+      _ ->
+        Map.merge(play, %{errors: ["Not In Dictionary, unknown words: #{simplify_words(words_invalid)}"]})
+    end
+  end
+  def verify_letters_form_full_words(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
+
+  @doc """
+  Sometimes we want simple lists of actual words, not squares/plays
+
+  ## Examples
+
+      iex> Wordiverse.GamePlay.simplify_words([[%{letter: "A"}, %{letter: "B"}]])
+      "AB"
+
+      iex> Wordiverse.GamePlay.simplify_words([[%{letter: "A"}, %{letter: "B"}], [%{letter: "B"}, %{letter: "A"}]])
+      "AB, BA"
+  """
+  def simplify_words(words) do
+    words
+    |> Enum.map(
+      fn(word) ->
+        word |> Enum.map(fn(%{letter: l}) -> l end) |> Enum.join("")
+      end
+    )
+    |> Enum.join(", ")
+  end
+
+  @doc """
+  Lookup a word in the dictionary serivce for this type
+  NOTE the Dictionary must already be started and running
+
+  ## Examples
+
+      iex> Wordiverse.Dictionary.start_link(:mock)
+      iex> game = %Wordiverse.Game{type: :mock}
+      iex> word = [%{letter: "A"}, %{letter: "L"}, %{letter: "L"}]
+      iex> Wordiverse.GamePlay.verify_word_full(game, word)
+      true
+
+      iex> Wordiverse.Dictionary.start_link(:mock)
+      iex> game = %Wordiverse.Game{type: :mock}
+      iex> word = [%{letter: "A"}, %{letter: "L"}]
+      iex> Wordiverse.GamePlay.verify_word_full(game, word)
+      false
+  """
+  def verify_word_full(%Wordiverse.Game{type: type}, word) do
+    word = Enum.map(word, fn(%{letter: l}) -> l end)
+    Wordiverse.Dictionary.is_word_full?(type, word) == :ok
+  end
 
 end
-

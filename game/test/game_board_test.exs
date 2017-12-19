@@ -111,58 +111,5 @@ defmodule GameBoardTest do
     board = put_in(board, [12, 12, :letter], "a")
     assert Wordiverse.GameBoard.empty?(board) == false
   end
-  test "touching should return adjacent squares for all 4 directions if not edge" do
-    board = Wordiverse.GameBoard.create_board(15, 15) |> fill_abcs()
-    assert Wordiverse.GameBoard.touching(board, 5, 5) == [
-      %{bonus: nil, letter: "J", y: 4, x: 5}, # top (y-1)
-      %{bonus: nil, letter: "L", y: 5, x: 6}, # right (x+1)
-      %{bonus: nil, letter: "L", y: 6, x: 5}, # bottom (y+1)
-      %{bonus: nil, letter: "J", y: 5, x: 4}, # left (x-1)
-    ]
-  end
-  test "touching should return adjacent squares for only 3 directions if edge" do
-    board = Wordiverse.GameBoard.create_board(15, 15) |> fill_abcs()
-    assert Wordiverse.GameBoard.touching(board, 0, 0) == [
-      %{bonus: nil, letter: "B", y: 0, x: 1}, # right (x+1)
-      %{bonus: nil, letter: "B", y: 1, x: 0}, # bottom (y+1)
-    ]
-    assert Wordiverse.GameBoard.touching(board, 0, 7) == [
-      %{bonus: nil, letter: "I", y: 0, x: 8},
-      %{bonus: nil, letter: "I", y: 1, x: 7},
-      %{bonus: nil, letter: "G", y: 0, x: 6},
-    ]
-    assert Wordiverse.GameBoard.touching(board, 14, 7) == [
-      %{bonus: nil, letter: "U", y: 13, x: 7},
-      %{bonus: nil, letter: "W", y: 14, x: 8},
-      %{bonus: nil, letter: "U", y: 14, x: 6},
-    ]
-  end
-
-
-  # sometimes it's usefule to fill a board with letters
-  defp fill_abcs(board) do
-    abcs = Enum.map(?a..?z, fn(x) -> <<x :: utf8>> end)
-           |> Enum.map(&String.upcase/1)
-    count_y = board |> Map.keys() |> Enum.count()
-    count_x = board[0] |> Map.keys() |> Enum.count()
-    fill_abcs(board, abcs, count_y - 1, count_x - 1)
-  end
-  defp fill_abcs(board, abcs, 0, 0) do
-    # done...
-    board
-    |> put_in([0, 0, :letter], Enum.at(abcs, 0))
-  end
-  defp fill_abcs(board, abcs, y, -1) do
-    # nope - too far, move up a row
-    count_x = board[0] |> Map.keys() |> Enum.count()
-    board
-    |> fill_abcs(abcs, y - 1, count_x - 1)
-  end
-  defp fill_abcs(board, abcs, y, x) do
-    board
-    |> put_in([y, x, :letter], Enum.at(abcs, rem((x + y), 26)))
-    # next, move left in same row
-    |> fill_abcs(abcs, y, x - 1)
-  end
 
 end

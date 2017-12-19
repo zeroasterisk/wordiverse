@@ -8,6 +8,7 @@ defmodule Wordiverse.GameBoard do
   because elixir...
   http://blog.danielberkompas.com/2016/04/23/multidimensional-arrays-in-elixir.html
   """
+  require Logger
 
   @doc """
   Build a new board for a type of game
@@ -94,12 +95,12 @@ defmodule Wordiverse.GameBoard do
 
   # given an X & Y count, build out a matrix of nils
   def create_board(y_count, x_count) do
-    Range.new(0, x_count - 1)
-    |> Enum.reduce(%{}, fn(i, board) -> Map.put(board, i, create_board_row(y_count)) end)
+    r = Range.new(0, x_count - 1)
+    r |> Enum.reduce(%{}, fn(i, board) -> board |> Map.put(i, create_board_row(y_count)) end)
   end
   def create_board_row(y_count) do
-    Range.new(0, y_count - 1)
-    |> Enum.reduce(%{}, fn(i, row) -> Map.put(row, i, create_board_cell()) end)
+    r = Range.new(0, y_count - 1)
+    r |> Enum.reduce(%{}, fn(i, row) -> row |> Map.put(i, create_board_cell()) end)
   end
   def create_board_cell() do
     %{bonus: nil, letter: nil}
@@ -118,7 +119,7 @@ defmodule Wordiverse.GameBoard do
   def add_bonus_bulk(board, [] = _coords, _bonus), do: board
   def add_bonus_bulk(board, coords, bonus) do
     {[y, x], coords} = List.pop_at(coords, 0)
-    put_in(board, [y, x, :bonus], bonus) |> add_bonus_bulk(coords, bonus)
+    board |> put_in([y, x, :bonus], bonus) |> add_bonus_bulk(coords, bonus)
   end
 
   @doc """
@@ -178,40 +179,20 @@ defmodule Wordiverse.GameBoard do
   end
 
   @doc """
+  Add a letters_yx format set of letters to a board
+  (this is usually for building out the next version of the board, if a play commits)
+
+  ## Examples
+
+      iex> board = %{0 => %{0 => %{letter: nil}, 1 => %{letter: nil}}}
+      iex> letters_yx = [["A", 0, 0], ["B", 0, 1]]
+      iex> Wordiverse.GameBoard.add_letters_xy(board, letters_yx)
+      %{0 => %{0 => %{letter: "A"}, 1 => %{letter: "B"}}}
 
   """
-  def get(board, y, x) do
-    Map.merge(board[y][x], %{y: y, x: x})
+  def add_letters_xy(board, []), do: board
+  def add_letters_xy(board, [[letter, y, x] | letters_yx]) do
+    board |> put_in([y, x, :letter], letter) |> add_letters_xy(letters_yx)
   end
-
-  @doc """
-  Get all touching letters for a single y+x
-  It will return 2-4 squares from the board, with the y & x added
-  """
-  def touching(board, y, x) do
-    []
-    |> touching_left(board, y, x)
-    |> touching_bottom(board, y, x)
-    |> touching_right(board, y, x)
-    |> touching_top(board, y, x)
-  end
-  def touching_top(acc, _board, 0, _x), do: acc
-  def touching_top(acc, board, y, x), do: [get(board, y - 1, x) | acc]
-  def touching_right(acc, board, y, x) do
-    count_x = board[0] |> Map.keys() |> Enum.count()
-    case x > (count_x - 2) do
-      true -> acc
-      false -> [get(board, y, x + 1) | acc]
-    end
-  end
-  def touching_bottom(acc, board, y, x) do
-    count_y = board |> Map.keys() |> Enum.count()
-    case y > (count_y - 2) do
-      true -> acc
-      false -> [get(board, y + 1, x) | acc]
-    end
-  end
-  def touching_left(acc, _board, _y, 0), do: acc
-  def touching_left(acc, board, y, x), do: [get(board, y, x - 1) | acc]
 
 end

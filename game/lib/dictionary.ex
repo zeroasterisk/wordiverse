@@ -17,10 +17,11 @@ defmodule Wordiverse.Dictionary do
     returns {:error, {:already_started, #PID<0.248.0>}}
   """
   def start_link(type) do
-    GenServer.start_link(__MODULE__, type, [
+    out = GenServer.start_link(__MODULE__, type, [
       name: type,
       timeout: 30_000, # 30 seconds to init or die
-    ]) |> start_link_nice()
+    ])
+    out |> start_link_nice()
   end
   def start_link_nice({:ok, pid}), do: {:ok, pid}
   def start_link_nice({:error, {:already_started, pid}}), do: {:ok, pid}
