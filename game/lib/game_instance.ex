@@ -1,4 +1,4 @@
-defmodule Wordiverse.GameActions do
+defmodule Wordiverse.GameInstance do
   @moduledoc """
   This is actions taken on our Wordiverse Game
   """
@@ -10,7 +10,7 @@ defmodule Wordiverse.GameActions do
 
       iex> player_1_id = 1234
       iex> player_2_id = 827
-      iex> game = Wordiverse.GameActions.create(:wordfeud, player_1_id, player_2_id)
+      iex> game = Wordiverse.GameInstance.create(:wordfeud, player_1_id, player_2_id)
       iex> Map.get(game, :type)
       :wordfeud
 

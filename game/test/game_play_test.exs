@@ -23,7 +23,7 @@ defmodule GamePlayTest do
 
     setup do
       Wordiverse.Dictionary.start_link(:mock)
-      game = Wordiverse.GameActions.create(:mock, :player_1, :player_2)
+      game = Wordiverse.GameInstance.create(:mock, :player_1, :player_2)
       tray = []
             |> Wordiverse.GameTiles.add("A", 1, 2)
             |> Wordiverse.GameTiles.add("L", 1, 2)

@@ -1,4 +1,4 @@
-defmodule GameActionsTest do
+defmodule GameInstanceTest do
   use ExUnit.Case
   doctest Wordiverse.Game
 
@@ -6,7 +6,7 @@ defmodule GameActionsTest do
     type = :wordfeud
     player_1_id = :bot_lookahead_1
     player_2_id = :bot_lookahead_2
-    game = Wordiverse.GameActions.create(type, player_1_id, player_2_id)
+    game = Wordiverse.GameInstance.create(type, player_1_id, player_2_id)
     assert game.type == type
     assert game.player_1.id == player_1_id
     assert game.player_2.id == player_2_id

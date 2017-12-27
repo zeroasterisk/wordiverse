@@ -1,6 +1,12 @@
-# Game
+# Wordiverse Game
 
-**TODO: Add description**
+This is the main interface to the [Wordiverse](../) game and systems.
+
+It is an Elixir system, but may be extended to support phoenix.
+
+## Goals
+
+
 
 ## Installation
 

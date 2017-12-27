@@ -48,9 +48,13 @@ defmodule Wordiverse.Game do
       ]
     )
   end
-  def get(pid, key \\ :board) do
-    GenServer.call(pid, {:get, key})
-  end
+  def get(pid, key \\ :board), do: GenServer.call(pid, {:get, key})
+  def board(pid), do: get(pid, :board)
+  def player_1(pid), do: get(pid, :player_1)
+  def player_2(pid), do: get(pid, :player_2)
+  def tiles(pid), do: get(pid, :tiles)
+
+
 
   ### Server API
 
@@ -60,7 +64,7 @@ defmodule Wordiverse.Game do
   def init([type, player_1_id, player_2_id]) do
     allowed = [:scrabble, :wordfeud, :mock]
     case Enum.member?(allowed, type) do
-      true -> {:ok, Wordiverse.GameActions.create(type, player_1_id, player_2_id)}
+      true -> {:ok, Wordiverse.GameInstance.create(type, player_1_id, player_2_id)}
       false -> {:error, "Invalid type supplied to Game init #{type}"}
     end
   end

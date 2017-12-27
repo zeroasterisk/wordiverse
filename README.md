@@ -4,10 +4,23 @@ This is an experiment to play with Elixir, OTP, and _(eventually)_ neural networ
 
 ### Roadmap
 
-- [ ] Build out a WordFued/Scabble like game in Elixir, via OTP
-- [ ] Build a dictionary and rule set to secure the game
+- [x] Build out a WordFued/Scabble like game in Elixir, via OTP
+- [x] Build a dictionary and rule set to secure the game
 - [ ] Build a basic "look ahead" player bot
 - [ ] Build a neural network player bot and train
+- [ ] Build a basic lobby (game management) interface
+- [ ] Build a basic API client to connect to WordFued
+
+### Usage
+
+```ex
+iex> {:ok, pid} = Wordiverse.Game.start_link(:wordfeud, :bot_lookahead_larry, :bot_lookahead_lester)
+iex> Wordiverse.Game.get(pid)
+iex> Wordiverse.Game.board(pid)
+iex> Wordiverse.Game.player_1(pid)
+iex> Wordiverse.Game.player_2(pid)
+iex> Wordiverse.Game.tiles(pid)
+```
 
 ### Resources
 
