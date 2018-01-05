@@ -14,7 +14,7 @@ use Mix.Config
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:wordza_game, :key)
+#     Application.get_env(:wordza, :key)
 #
 # You can also configure a 3rd-party app:
 #

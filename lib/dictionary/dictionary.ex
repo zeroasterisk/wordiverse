@@ -73,7 +73,7 @@ defmodule Wordza.Dictionary.Helpers do
     |> Enum.reduce(%{}, fn (line, dict) -> add_to_dict(dict, line) end)
   end
   def build_dict(:scrabble) do
-    "./lib/dictionary_scrabble.txt"
+    "./lib/dictionary/dictionary_scrabble.txt"
     |> File.stream!
     |> Stream.map(&String.trim/1)
     |> Enum.reduce(%{}, fn (line, dict) -> add_to_dict(dict, line) end)
@@ -82,7 +82,7 @@ defmodule Wordza.Dictionary.Helpers do
     # the wordfeud game uses all kinds of stuff scrabble doesn't
     # but I have not yet found the official dictionary
     # so I downloaded from: https://github.com/dwyl/english-words
-    "./lib/dictionary_dwly.txt"
+    "./lib/dictionary/dictionary_dwly.txt"
     |> File.stream!
     |> Stream.map(&String.trim/1)
     |> Enum.reduce(%{}, fn (line, dict) -> add_to_dict(dict, line) end)
