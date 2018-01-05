@@ -1,6 +1,6 @@
-defmodule Wordiverse.Dictionary do
+defmodule Wordza.Dictionary do
   @moduledoc """
-  This is our Wordiverse.Dictionary
+  This is our Wordza.Dictionary
   We only need 1 dictionary, for all of our Games of each type
   So it is it's own GenServer
   """
@@ -41,20 +41,20 @@ defmodule Wordiverse.Dictionary do
   def init(type) do
     allowed = [:scrabble, :wordfeud, :mock]
     case Enum.member?(allowed, type) do
-      true -> {:ok, Wordiverse.Dictionary.Helpers.build_dict(type)}
+      true -> {:ok, Wordza.Dictionary.Helpers.build_dict(type)}
       false -> {:error, "Invalid type supplied to Dictionary init #{type}"}
     end
   end
   def handle_call({:is_word_start?, str}, _from, state) do
-    {:reply, Wordiverse.Dictionary.Helpers.is_word_start?(str, state), state}
+    {:reply, Wordza.Dictionary.Helpers.is_word_start?(str, state), state}
   end
   def handle_call({:is_word_full?, str}, _from, state) do
-    {:reply, Wordiverse.Dictionary.Helpers.is_word_full?(str, state), state}
+    {:reply, Wordza.Dictionary.Helpers.is_word_full?(str, state), state}
   end
 
 end
 
-defmodule Wordiverse.Dictionary.Helpers do
+defmodule Wordza.Dictionary.Helpers do
   @moduledoc """
   Internal Helper functions for the Dictionary module
   """

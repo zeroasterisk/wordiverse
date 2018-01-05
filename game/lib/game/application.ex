@@ -1,4 +1,4 @@
-defmodule Wordiverse.Game.Application do
+defmodule Wordza.Game.Application do
   # See https://hexdocs.pm/elixir/Application.html
   # for more information on OTP Applications
   @moduledoc false
@@ -8,13 +8,13 @@ defmodule Wordiverse.Game.Application do
   def start(_type, _args) do
     # List all child processes to be supervised
     children = [
-      # Starts a worker by calling: Wordiverse.Game.Worker.start_link(arg)
-      # {Wordiverse.Game.Worker, arg},
+      # Starts a worker by calling: Wordza.Game.Worker.start_link(arg)
+      # {Wordza.Game.Worker, arg},
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: Wordiverse.Game.Supervisor]
+    opts = [strategy: :one_for_one, name: Wordza.Game.Supervisor]
     Supervisor.start_link(children, opts)
   end
 end

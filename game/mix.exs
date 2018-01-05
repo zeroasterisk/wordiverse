@@ -1,9 +1,9 @@
-defmodule Wordiverse.Game.Mixfile do
+defmodule Wordza.Game.Mixfile do
   use Mix.Project
 
   def project do
     [
-      app: :game,
+      app: :wordza_game,
       version: "0.1.0",
       elixir: "~> 1.5",
       start_permanent: Mix.env == :prod,
@@ -18,7 +18,7 @@ defmodule Wordiverse.Game.Mixfile do
         :logger,
         :timex
       ],
-      mod: {Wordiverse.Game.Application, [
+      mod: {Wordza.Game.Application, [
       ]}
     ]
   end

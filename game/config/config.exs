@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :game, key: :value
+#     config :wordza, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:game, :key)
+#     Application.get_env(:wordza_game, :key)
 #
 # You can also configure a 3rd-party app:
 #

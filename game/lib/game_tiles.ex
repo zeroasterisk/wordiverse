@@ -1,4 +1,4 @@
-defmodule Wordiverse.GameTile do
+defmodule Wordza.GameTile do
   @moduledoc """
   A single tile, must know it's Letter and it's Value
   NOTE: a blank or joker has a letter of "?" and value of 0
@@ -9,9 +9,9 @@ defmodule Wordiverse.GameTile do
   ]
 end
 
-defmodule Wordiverse.GameTiles do
+defmodule Wordza.GameTiles do
   @moduledoc """
-  This is our Wordiverse GameTiles
+  This is our Wordza GameTiles
   The configuration of all avaialable tiles.
   """
 
@@ -93,7 +93,7 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
   def add(tiles, _letter, _value, 0 = _count), do: tiles
   def add(tiles, letter, value, count) do
     [
-      %Wordiverse.GameTile{letter: letter, value: value}
+      %Wordza.GameTile{letter: letter, value: value}
       |
       add(tiles, letter, value, (count - 1))
     ]
@@ -104,12 +104,24 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
 
   ## Examples
 
-      iex> Wordiverse.GameTiles.take_random([1, 1, 1, 1, 1, 1, 1], 2)
+      iex> Wordza.GameTiles.take_random([1, 1, 1, 1, 1, 1, 1], 2)
       {[1, 1], [1, 1, 1, 1, 1]}
+
+      iex> Wordza.GameTiles.take_random([1, 1, 1, 1, 1, 1, 1], 5)
+      {[1, 1, 1, 1, 1], [1, 1]}
+
+      iex> Wordza.GameTiles.take_random([1, 1, 1, 1, 1, 1, 1], 7)
+      {[1, 1, 1, 1, 1, 1, 1], []}
+
+      iex> Wordza.GameTiles.take_random([1, 1], 99)
+      {[1, 1], []}
   """
-  def take_random(tiles, count \\ 1) when is_list(tiles) and count > 0 do
+  def take_random(tiles, _count = 0) when is_list(tiles), do: {[], tiles}
+  def take_random(tiles, count) when is_list(tiles) and count > 0 do
     total = Enum.count(tiles)
-    [in_pile, in_hand] = tiles |> Enum.shuffle() |> Enum.chunk_every(total - count)
+    tiles = tiles |> Enum.shuffle()
+    in_hand = tiles |> Enum.slice(0, count)
+    in_pile = tiles |> Enum.slice(count, total)
     {in_hand, in_pile}
   end
 
@@ -120,17 +132,17 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
 
       iex> word = ["a", "l"]
       iex> tray = ["a", "l", "b", "d", "n", "l"]
-      iex> Wordiverse.GameTiles.take_from_tray(tray, word)
+      iex> Wordza.GameTiles.take_from_tray(tray, word)
       {["a", "l"], ["b", "d", "n", "l"]}
 
       iex> word = ["a", "l", "l"]
       iex> tray = ["a", "l", "b", "d", "n", "l"]
-      iex> Wordiverse.GameTiles.take_from_tray(tray, word)
+      iex> Wordza.GameTiles.take_from_tray(tray, word)
       {["a", "l", "l"], ["b", "d", "n"]}
 
       iex> word = ["a", "l", "a", "n"]
       iex> tray = ["a", "l", "b", "d", "n", "l"]
-      iex> Wordiverse.GameTiles.take_from_tray(tray, word)
+      iex> Wordza.GameTiles.take_from_tray(tray, word)
       {[], ["a", "l", "b", "d", "n", "l"]}
 
   """

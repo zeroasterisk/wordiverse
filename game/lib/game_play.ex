@@ -1,6 +1,6 @@
-defmodule Wordiverse.GamePlay do
+defmodule Wordza.GamePlay do
   @moduledoc """
-  This is a single play on our Wordiverse Game
+  This is a single play on our Wordza Game
   1. setup: player_id, letter on coords
   2. verify: player_id, has letters in tray
   3. verify: letters are in row or col
@@ -22,7 +22,7 @@ defmodule Wordiverse.GamePlay do
   Create a new play
   """
   def create(player_key, letters_yx) do
-    %Wordiverse.GamePlay{
+    %Wordza.GamePlay{
       player_key: player_key,
       letters_yx: letters_yx,
     }
@@ -33,8 +33,8 @@ defmodule Wordiverse.GamePlay do
   Verify a play is playable on a game
   """
   def verify(
-    %Wordiverse.GamePlay{} = play,
-    %Wordiverse.Game{} = game
+    %Wordza.GamePlay{} = play,
+    %Wordza.GameInstance{} = game
   ) do
     play
     # verifications which only consider the play itself
@@ -55,47 +55,47 @@ defmodule Wordiverse.GamePlay do
 
   ## Examples
 
-      iex> play = %Wordiverse.GamePlay{}
-      iex> play = Wordiverse.GamePlay.verify_no_errors(play)
+      iex> play = %Wordza.GamePlay{}
+      iex> play = Wordza.GamePlay.verify_no_errors(play)
       iex> Map.get(play, :valid)
       true
 
-      iex> play = %Wordiverse.GamePlay{errors: ["bad stuff"]}
-      iex> play = Wordiverse.GamePlay.verify_no_errors(play)
+      iex> play = %Wordza.GamePlay{errors: ["bad stuff"]}
+      iex> play = Wordza.GamePlay.verify_no_errors(play)
       iex> Map.get(play, :valid)
       false
 
   """
-  def verify_no_errors(%Wordiverse.GamePlay{errors: []} = play), do: play |> Map.merge(%{valid: true})
-  def verify_no_errors(%Wordiverse.GamePlay{} = play), do: play |> Map.merge(%{valid: false})
+  def verify_no_errors(%Wordza.GamePlay{errors: []} = play), do: play |> Map.merge(%{valid: true})
+  def verify_no_errors(%Wordza.GamePlay{} = play), do: play |> Map.merge(%{valid: false})
 
   @doc """
   Verify a play letters are all valid letters
 
   ## Examples
 
-      iex> play = %Wordiverse.GamePlay{letters_yx: []}
-      iex> play = Wordiverse.GamePlay.verify_letters_are_valid(play)
+      iex> play = %Wordza.GamePlay{letters_yx: []}
+      iex> play = Wordza.GamePlay.verify_letters_are_valid(play)
       iex> Map.get(play, :errors)
       ["You have not played any letters"]
 
       iex> letters_yx = [[:a, 0, 2], ["l", 1, 2], ["l", 2, 2]]
-      iex> play = %Wordiverse.GamePlay{letters_yx: letters_yx}
-      iex> play = Wordiverse.GamePlay.verify_letters_are_valid(play)
+      iex> play = %Wordza.GamePlay{letters_yx: letters_yx}
+      iex> play = Wordza.GamePlay.verify_letters_are_valid(play)
       iex> Map.get(play, :errors)
       ["You have played invalid letters"]
 
       iex> letters_yx = [["a", 0, 2], ["l", 1, 2], ["l", 2, 2]]
-      iex> play = %Wordiverse.GamePlay{letters_yx: letters_yx}
-      iex> play = Wordiverse.GamePlay.verify_letters_are_valid(play)
+      iex> play = %Wordza.GamePlay{letters_yx: letters_yx}
+      iex> play = Wordza.GamePlay.verify_letters_are_valid(play)
       iex> Map.get(play, :errors)
       []
 
   """
-  def verify_letters_are_valid(%Wordiverse.GamePlay{letters_yx: [], errors: errors} = play) do
+  def verify_letters_are_valid(%Wordza.GamePlay{letters_yx: [], errors: errors} = play) do
     play |> Map.merge(%{errors: ["You have not played any letters" | errors]})
   end
-  def verify_letters_are_valid(%Wordiverse.GamePlay{letters_yx: letters_yx, errors: errors} = play) do
+  def verify_letters_are_valid(%Wordza.GamePlay{letters_yx: letters_yx, errors: errors} = play) do
     case Enum.all?(letters_yx, &is_valid_letter_xy/1) do
       true -> play
       false ->
@@ -114,19 +114,19 @@ defmodule Wordiverse.GamePlay do
   ## Examples
 
       iex> letters_yx = [["a", 0, 0], ["l", 1, 1]]
-      iex> play = %Wordiverse.GamePlay{letters_yx: letters_yx}
-      iex> play = Wordiverse.GamePlay.verify_letters_are_single_direction(play)
+      iex> play = %Wordza.GamePlay{letters_yx: letters_yx}
+      iex> play = Wordza.GamePlay.verify_letters_are_single_direction(play)
       iex> Map.get(play, :errors)
       ["You must play all tiles in a single row or column"]
 
       iex> letters_yx = [["a", 0, 2], ["l", 1, 2], ["l", 2, 2]]
-      iex> play = %Wordiverse.GamePlay{letters_yx: letters_yx}
-      iex> play = Wordiverse.GamePlay.verify_letters_are_single_direction(play)
+      iex> play = %Wordza.GamePlay{letters_yx: letters_yx}
+      iex> play = Wordza.GamePlay.verify_letters_are_single_direction(play)
       iex> Map.get(play, :errors)
       []
 
   """
-  def verify_letters_are_single_direction(%Wordiverse.GamePlay{letters_yx: letters_yx, errors: []} = play) do
+  def verify_letters_are_single_direction(%Wordza.GamePlay{letters_yx: letters_yx, errors: []} = play) do
     count_y = letters_yx |> Enum.map(fn([_, y, _]) -> y end) |> Enum.uniq() |> Enum.count()
     count_x = letters_yx |> Enum.map(fn([_, _, x]) -> x end) |> Enum.uniq() |> Enum.count()
     case count_x == 1 or count_y == 1 do
@@ -135,7 +135,7 @@ defmodule Wordiverse.GamePlay do
         play |> Map.merge(%{errors: ["You must play all tiles in a single row or column"]})
     end
   end
-  def verify_letters_are_single_direction(%Wordiverse.GamePlay{} = play), do: play
+  def verify_letters_are_single_direction(%Wordza.GamePlay{} = play), do: play
 
 
   @doc """
@@ -144,14 +144,14 @@ defmodule Wordiverse.GamePlay do
   NOTE this will modify letters_in_tray_after_play on successful run (could move to different function)
   """
   def verify_letters_in_tray(
-    %Wordiverse.GamePlay{player_key: player_key, letters_yx: letters_yx, errors: []} = play,
-    %Wordiverse.Game{} = game
+    %Wordza.GamePlay{player_key: player_key, letters_yx: letters_yx, errors: []} = play,
+    %Wordza.GameInstance{} = game
   ) do
     player = Map.get(game, player_key)
     letters_in_tray = player |> Map.get(:tiles_in_tray) |> Enum.map(fn(t) -> t.letter end)
     letters_in_play = letters_yx |> Enum.map(fn([letter, _, _]) -> letter end)
     # TODO account for "?"
-    {tiles_playable, tray} = Wordiverse.GameTiles.take_from_tray(
+    {tiles_playable, tray} = Wordza.GameTiles.take_from_tray(
       letters_in_tray,
       letters_in_play
     )
@@ -162,14 +162,14 @@ defmodule Wordiverse.GamePlay do
         Map.merge(play, %{errors: ["Tiles not in your tray"]})
     end
   end
-  def verify_letters_in_tray(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
+  def verify_letters_in_tray(%Wordza.GamePlay{} = play, %Wordza.GameInstance{}), do: play
 
   @doc """
   Verify a play does no overlap any played squares on the board game
   """
   def verify_letters_do_not_overlap(
-    %Wordiverse.GamePlay{letters_yx: letters_yx, errors: []} = play,
-    %Wordiverse.Game{board: board}
+    %Wordza.GamePlay{letters_yx: letters_yx, errors: []} = play,
+    %Wordza.GameInstance{board: board}
   ) do
     new_squares = letters_yx
                   |> Enum.map(fn([_, y, x]) -> board[y][x][:letter] end)
@@ -180,17 +180,17 @@ defmodule Wordiverse.GamePlay do
         Map.merge(play, %{errors: ["Tiles may not overlap"]})
     end
   end
-  def verify_letters_do_not_overlap(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
+  def verify_letters_do_not_overlap(%Wordza.GamePlay{} = play, %Wordza.GameInstance{}), do: play
 
   @doc """
   Verify a play does abut at least 1 already played tile
   NOTE expemt for empty board
   """
   def verify_letters_touch(
-    %Wordiverse.GamePlay{letters_yx: letters_yx, errors: []} = play,
-    %Wordiverse.Game{board: board}
+    %Wordza.GamePlay{letters_yx: letters_yx, errors: []} = play,
+    %Wordza.GameInstance{board: board}
   ) do
-    case Wordiverse.GameBoard.empty?(board) do
+    case Wordza.GameBoard.empty?(board) do
       true -> play
       false ->
         case any_letters_xy_touching?(board, letters_yx) do
@@ -200,14 +200,14 @@ defmodule Wordiverse.GamePlay do
         end
     end
   end
-  def verify_letters_touch(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
+  def verify_letters_touch(%Wordza.GamePlay{} = play, %Wordza.GameInstance{}), do: play
 
   defp any_letters_xy_touching?(board, letters_yx) do
     letters_yx
     |> Enum.any?(
       fn([_, y, x]) ->
         board
-        |> Wordiverse.GameBoardGet.touching(y, x)
+        |> Wordza.GameBoardGet.touching(y, x)
         |> Enum.any?(fn(%{letter: letter}) -> is_bitstring(letter) end)
       end
     )
@@ -218,10 +218,10 @@ defmodule Wordiverse.GamePlay do
   NOTE only for empty board
   """
   def verify_letters_cover_start(
-    %Wordiverse.GamePlay{letters_yx: letters_yx, errors: []} = play,
-    %Wordiverse.Game{board: board}
+    %Wordza.GamePlay{letters_yx: letters_yx, errors: []} = play,
+    %Wordza.GameInstance{board: board}
   ) do
-    case Wordiverse.GameBoard.empty?(board) do
+    case Wordza.GameBoard.empty?(board) do
       false -> play
       true ->
         # ensure the center cell is in the play
@@ -232,10 +232,10 @@ defmodule Wordiverse.GamePlay do
         end
     end
   end
-  def verify_letters_cover_start(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
+  def verify_letters_cover_start(%Wordza.GamePlay{} = play, %Wordza.GameInstance{}), do: play
 
   defp any_letters_xy_on_center?(board, letters_yx) do
-    {_total_y, _total_x, center_y, center_x} = Wordiverse.GameBoard.measure(board)
+    {_total_y, _total_x, center_y, center_x} = Wordza.GameBoard.measure(board)
     letters_yx
     |> Enum.any?(
       fn([_, y, x]) -> y == center_y and x == center_x end
@@ -248,13 +248,13 @@ defmodule Wordiverse.GamePlay do
   are full words (uses the Dictionary for the type of game = GenServer)
   """
   def verify_letters_form_full_words(
-    %Wordiverse.GamePlay{letters_yx: letters_yx, errors: []} = play,
-    %Wordiverse.Game{board: board} = game
+    %Wordza.GamePlay{letters_yx: letters_yx, errors: []} = play,
+    %Wordza.GameInstance{board: board} = game
   ) do
     # get all words for all letters
     # ensure all words are full words
-    board_next = board |> Wordiverse.GameBoard.add_letters_xy(letters_yx)
-    words = Wordiverse.GameBoardGet.touching_words(board_next, letters_yx)
+    board_next = board |> Wordza.GameBoard.add_letters_xy(letters_yx)
+    words = Wordza.GameBoardGet.touching_words(board_next, letters_yx)
     words_invalid = Enum.filter(words, fn(word) -> !verify_word_full(game, word) end)
     case Enum.count(words_invalid) do
       0 -> play
@@ -264,17 +264,17 @@ defmodule Wordiverse.GamePlay do
         Map.merge(play, %{errors: ["Not In Dictionary, unknown words: #{simplify_words(words_invalid)}"]})
     end
   end
-  def verify_letters_form_full_words(%Wordiverse.GamePlay{} = play, %Wordiverse.Game{}), do: play
+  def verify_letters_form_full_words(%Wordza.GamePlay{} = play, %Wordza.GameInstance{}), do: play
 
   @doc """
   Sometimes we want simple lists of actual words, not squares/plays
 
   ## Examples
 
-      iex> Wordiverse.GamePlay.simplify_words([[%{letter: "A"}, %{letter: "B"}]])
+      iex> Wordza.GamePlay.simplify_words([[%{letter: "A"}, %{letter: "B"}]])
       "AB"
 
-      iex> Wordiverse.GamePlay.simplify_words([[%{letter: "A"}, %{letter: "B"}], [%{letter: "B"}, %{letter: "A"}]])
+      iex> Wordza.GamePlay.simplify_words([[%{letter: "A"}, %{letter: "B"}], [%{letter: "B"}, %{letter: "A"}]])
       "AB, BA"
   """
   def simplify_words(words) do
@@ -293,21 +293,21 @@ defmodule Wordiverse.GamePlay do
 
   ## Examples
 
-      iex> Wordiverse.Dictionary.start_link(:mock)
-      iex> game = %Wordiverse.Game{type: :mock}
+      iex> Wordza.Dictionary.start_link(:mock)
+      iex> game = %Wordza.GameInstance{type: :mock}
       iex> word = [%{letter: "A"}, %{letter: "L"}, %{letter: "L"}]
-      iex> Wordiverse.GamePlay.verify_word_full(game, word)
+      iex> Wordza.GamePlay.verify_word_full(game, word)
       true
 
-      iex> Wordiverse.Dictionary.start_link(:mock)
-      iex> game = %Wordiverse.Game{type: :mock}
+      iex> Wordza.Dictionary.start_link(:mock)
+      iex> game = %Wordza.GameInstance{type: :mock}
       iex> word = [%{letter: "A"}, %{letter: "L"}]
-      iex> Wordiverse.GamePlay.verify_word_full(game, word)
+      iex> Wordza.GamePlay.verify_word_full(game, word)
       false
   """
-  def verify_word_full(%Wordiverse.Game{type: type}, word) do
+  def verify_word_full(%Wordza.GameInstance{type: type}, word) do
     word = Enum.map(word, fn(%{letter: l}) -> l end)
-    Wordiverse.Dictionary.is_word_full?(type, word) == :ok
+    Wordza.Dictionary.is_word_full?(type, word) == :ok
   end
 
 end

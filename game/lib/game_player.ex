@@ -1,6 +1,6 @@
-defmodule Wordiverse.GamePlayer do
+defmodule Wordza.GamePlayer do
   @moduledoc """
-  This is our Wordiverse GamePlayer
+  This is our Wordza GamePlayer
 
   """
   defstruct [
@@ -10,7 +10,7 @@ defmodule Wordiverse.GamePlayer do
   ]
 
   def create(id) do
-    %Wordiverse.GamePlayer{
+    %Wordza.GamePlayer{
       id: id,
       tiles_in_tray: [],
       score: 0,

@@ -1,6 +1,6 @@
-defmodule Wordiverse.GameBoard do
+defmodule Wordza.GameBoard do
   @moduledoc """
-  This is our Wordiverse GameBoard
+  This is our Wordza GameBoard
   The configuration of all board positions.
   The configuration of all current played tiles on the board.
 
@@ -186,7 +186,7 @@ defmodule Wordiverse.GameBoard do
 
       iex> board = %{0 => %{0 => %{letter: nil}, 1 => %{letter: nil}}}
       iex> letters_yx = [["A", 0, 0], ["B", 0, 1]]
-      iex> Wordiverse.GameBoard.add_letters_xy(board, letters_yx)
+      iex> Wordza.GameBoard.add_letters_xy(board, letters_yx)
       %{0 => %{0 => %{letter: "A"}, 1 => %{letter: "B"}}}
 
   """

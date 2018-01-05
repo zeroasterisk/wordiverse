@@ -1,6 +1,6 @@
-defmodule Wordiverse.GameBoardGet do
+defmodule Wordza.GameBoardGet do
   @moduledoc """
-  This is our Wordiverse GameBoard getter
+  This is our Wordza GameBoard getter
   it looks up various values from a board
 
   Some of the main methods are
@@ -17,7 +17,7 @@ defmodule Wordiverse.GameBoardGet do
   ## Examples
 
       iex> board = %{0 => %{0 => %{letter: nil}, 1 => %{letter: "A"}}}
-      iex> Wordiverse.GameBoardGet.at(board, 0, 1)
+      iex> Wordza.GameBoardGet.at(board, 0, 1)
       %{letter: "A", y: 0, x: 1}
   """
   def at(board, y, x) do
@@ -30,8 +30,8 @@ defmodule Wordiverse.GameBoardGet do
 
   ## Examples
 
-      iex> board = Wordiverse.GameBoard.create_board(3, 3)
-      iex> Wordiverse.GameBoardGet.touching(board, 0, 0)
+      iex> board = Wordza.GameBoard.create_board(3, 3)
+      iex> Wordza.GameBoardGet.touching(board, 0, 0)
       [
         %{bonus: nil, letter: nil, x: 1, y: 0},
         %{bonus: nil, letter: nil, x: 0, y: 1},

@@ -14,12 +14,12 @@ This is an experiment to play with Elixir, OTP, and _(eventually)_ neural networ
 ### Usage
 
 ```ex
-iex> {:ok, pid} = Wordiverse.Game.start_link(:wordfeud, :bot_lookahead_larry, :bot_lookahead_lester)
-iex> Wordiverse.Game.get(pid)
-iex> Wordiverse.Game.board(pid)
-iex> Wordiverse.Game.player_1(pid)
-iex> Wordiverse.Game.player_2(pid)
-iex> Wordiverse.Game.tiles(pid)
+iex> {:ok, pid} = Wordza.Game.start_link(:wordfeud, :bot_lookahead_larry, :bot_lookahead_lester)
+iex> Wordza.Game.get(pid)
+iex> Wordza.Game.board(pid)
+iex> Wordza.Game.player_1(pid)
+iex> Wordza.Game.player_2(pid)
+iex> Wordza.Game.tiles(pid)
 ```
 
 ### Resources

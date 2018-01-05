@@ -1,7 +1,7 @@
 defmodule GamePlayTest do
   use ExUnit.Case
-  doctest Wordiverse.GamePlay
-  alias Wordiverse.GamePlay
+  doctest Wordza.GamePlay
+  alias Wordza.GamePlay
 
   test "create a play" do
     word = [
@@ -22,13 +22,13 @@ defmodule GamePlayTest do
     defp get_errors(%GamePlay{errors: errors}), do: errors
 
     setup do
-      Wordiverse.Dictionary.start_link(:mock)
-      game = Wordiverse.GameInstance.create(:mock, :player_1, :player_2)
+      Wordza.Dictionary.start_link(:mock)
+      game = Wordza.GameInstance.create(:mock, :player_1, :player_2)
       tray = []
-            |> Wordiverse.GameTiles.add("A", 1, 2)
-            |> Wordiverse.GameTiles.add("L", 1, 2)
-            |> Wordiverse.GameTiles.add("N", 1, 2)
-            |> Wordiverse.GameTiles.add("D", 1, 1)
+            |> Wordza.GameTiles.add("A", 1, 2)
+            |> Wordza.GameTiles.add("L", 1, 2)
+            |> Wordza.GameTiles.add("N", 1, 2)
+            |> Wordza.GameTiles.add("D", 1, 1)
       player = Map.merge(game.player_1, %{tiles_in_tray: tray})
       game = Map.put(game, :player_1, player)
       word = [

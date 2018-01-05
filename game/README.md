@@ -1,6 +1,6 @@
-# Wordiverse Game
+# Wordza Game
 
-This is the main interface to the [Wordiverse](../) game and systems.
+This is the main interface to the [Wordza](../) game and systems.
 
 It is an Elixir system, but may be extended to support phoenix.
 
@@ -11,12 +11,12 @@ It is an Elixir system, but may be extended to support phoenix.
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `game` to your list of dependencies in `mix.exs`:
+by adding `wordza_game` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:game, "~> 0.1.0"}
+    {:wordza_game, "~> 0.1.0"}
   ]
 end
 ```

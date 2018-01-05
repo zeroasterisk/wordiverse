@@ -1,6 +1,6 @@
-defmodule Wordiverse.Game do
+defmodule Wordza.Game do
   @moduledoc """
-  This is our Wordiverse Game, a single game managing:
+  This is our Wordza Game, a single game managing:
   - Config (dictionary, rules)
   - Tiles (tiles available)
   - Board (tiles tiles played)
@@ -18,16 +18,6 @@ defmodule Wordiverse.Game do
   """
   use GenServer
 
-  defstruct [
-    type: nil,
-    board: nil,
-    tiles_in_pile: nil,
-    player_1: nil,
-    player_2: nil,
-    turn: 1,
-    score: 0,
-    plays: [],
-  ]
 
   ### Client API
   @doc """
@@ -64,7 +54,7 @@ defmodule Wordiverse.Game do
   def init([type, player_1_id, player_2_id]) do
     allowed = [:scrabble, :wordfeud, :mock]
     case Enum.member?(allowed, type) do
-      true -> {:ok, Wordiverse.GameInstance.create(type, player_1_id, player_2_id)}
+      true -> {:ok, Wordza.GameInstance.create(type, player_1_id, player_2_id)}
       false -> {:error, "Invalid type supplied to Game init #{type}"}
     end
   end
