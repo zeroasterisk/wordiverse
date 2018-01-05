@@ -33,7 +33,6 @@ defmodule Wordza.Game do
       __MODULE__,
       [type, player_1_id, player_2_id],
       [
-        name: type,
         timeout: 30_000, # 30 seconds to init or die
       ]
     )
@@ -43,8 +42,6 @@ defmodule Wordza.Game do
   def player_1(pid), do: get(pid, :player_1)
   def player_2(pid), do: get(pid, :player_2)
   def tiles(pid), do: get(pid, :tiles)
-
-
 
   ### Server API
 

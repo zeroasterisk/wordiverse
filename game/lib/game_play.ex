@@ -28,7 +28,6 @@ defmodule Wordza.GamePlay do
     }
   end
 
-
   @doc """
   Verify a play is playable on a game
   """
