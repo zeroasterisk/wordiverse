@@ -71,11 +71,11 @@ defmodule Wordza.GameBoardGet do
     # for each letter
     #   find all touching words in row
     #   find all touching words in column
-    words_y = letters_yx |> Enum.map(fn([letter, y, x]) -> word_for_y(board, y, x) end)
-    words_x = letters_yx |> Enum.map(fn([letter, y, x]) -> word_for_x(board, y, x) end)
+    words_y = letters_yx |> Enum.map(fn([_letter, y, x]) -> word_for_y(board, y, x) end)
+    words_x = letters_yx |> Enum.map(fn([_letter, y, x]) -> word_for_x(board, y, x) end)
     words_y ++ words_x |> Enum.uniq() |> Enum.filter(fn(word) -> Enum.count(word) > 1 end)
   end
-  def get_words_for_letter(%{board: board, words: words, scanned: scanned} = proc, y, x, letter) do
+  def get_words_for_letter(%{board: board, words: words, scanned: scanned} = proc, y, x, _letter) do
     case Enum.member?(scanned, [y, x]) do
       true ->
         Logger.info "sanned #{x}, #{y}"
