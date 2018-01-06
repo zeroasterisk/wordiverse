@@ -11,7 +11,50 @@ defmodule Wordza.GameBoard do
   require Logger
 
   @doc """
-  Build a new board for a type of game
+  Build a new board for a type of game.
+
+  It sets up a grid of the correct size and adds all the bonuses.
+
+  ## Examples
+
+      iex> Wordza.GameBoard.create(:mock)
+      %{
+        0 => %{
+          0 => %{bonus: :tw, letter: nil},
+          1 => %{bonus: nil, letter: nil},
+          2 => %{bonus: :tl, letter: nil},
+          3 => %{bonus: nil, letter: nil},
+          4 => %{bonus: :tw, letter: nil}
+        },
+        1 => %{
+          0 => %{bonus: nil, letter: nil},
+          1 => %{bonus: :dw, letter: nil},
+          2 => %{bonus: nil, letter: nil},
+          3 => %{bonus: :dw, letter: nil},
+          4 => %{bonus: nil, letter: nil}
+        },
+        2 => %{
+          0 => %{bonus: :dl, letter: nil},
+          1 => %{bonus: nil, letter: nil},
+          2 => %{bonus: :st, letter: nil},
+          3 => %{bonus: nil, letter: nil},
+          4 => %{bonus: :dl, letter: nil}
+        },
+        3 => %{
+          0 => %{bonus: nil, letter: nil},
+          1 => %{bonus: :dw, letter: nil},
+          2 => %{bonus: nil, letter: nil},
+          3 => %{bonus: :dw, letter: nil},
+          4 => %{bonus: nil, letter: nil}
+        },
+        4 => %{
+          0 => %{bonus: :tw, letter: nil},
+          1 => %{bonus: nil, letter: nil},
+          2 => %{bonus: :tl, letter: nil},
+          3 => %{bonus: nil, letter: nil},
+          4 => %{bonus: :tw, letter: nil}
+        }
+      }
   """
   def create(:scrabble) do
     board = create_board(15, 15)
@@ -93,7 +136,31 @@ defmodule Wordza.GameBoard do
     |> add_bonus_mirror()
   end
 
-  # given an X & Y count, build out a matrix of nils
+  @doc """
+  given an X & Y count, build out a matrix of nils
+
+  ## Examples
+
+      iex> Wordza.GameBoard.create_board(3, 3)
+      %{
+        0 => %{
+          0 => %{bonus: nil, letter: nil},
+          1 => %{bonus: nil, letter: nil},
+          2 => %{bonus: nil, letter: nil},
+        },
+        1 => %{
+          0 => %{bonus: nil, letter: nil},
+          1 => %{bonus: nil, letter: nil},
+          2 => %{bonus: nil, letter: nil},
+        },
+        2 => %{
+          0 => %{bonus: nil, letter: nil},
+          1 => %{bonus: nil, letter: nil},
+          2 => %{bonus: nil, letter: nil},
+        },
+      }
+
+  """
   def create_board(y_count, x_count) do
     r = Range.new(0, x_count - 1)
     r |> Enum.reduce(%{}, fn(i, board) -> board |> Map.put(i, create_board_row(y_count)) end)
@@ -102,12 +169,16 @@ defmodule Wordza.GameBoard do
     r = Range.new(0, y_count - 1)
     r |> Enum.reduce(%{}, fn(i, row) -> row |> Map.put(i, create_board_cell()) end)
   end
-  def create_board_cell() do
-    %{bonus: nil, letter: nil}
-  end
+  defp create_board_cell(), do: %{bonus: nil, letter: nil}
 
   @doc """
   Update a single cell with a single bonus
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.GameBoard.add_bonus(board, 0, 1, :x) |> get_in([0, 1, :bonus])
+      :x
   """
   def add_bonus(board, y, x, bonus) do
     put_in(board, [y, x, :bonus], bonus)
@@ -115,6 +186,12 @@ defmodule Wordza.GameBoard do
 
   @doc """
   Update a set of cells, with a bonus (bulk add)
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.GameBoard.add_bonus_bulk(board, [[0, 0], [0, 1]], :x) |> get_in([0, 1, :bonus])
+      :x
   """
   def add_bonus_bulk(board, [] = _coords, _bonus), do: board
   def add_bonus_bulk(board, coords, bonus) do
@@ -125,6 +202,12 @@ defmodule Wordza.GameBoard do
   @doc """
   Update all bonus cells, make the board a 4 quadrent mirror-copy of the top-left quad
   (this is kinda silly, but fun)
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([0, 0, :bonus], :x)
+      iex> Wordza.GameBoard.add_bonus_mirror(board) |> get_in([4, 4, :bonus])
+      :x
   """
   def add_bonus_mirror(board) do
     {total_y, total_x, center_y, center_x} = measure(board)
@@ -147,6 +230,12 @@ defmodule Wordza.GameBoard do
 
   @doc """
   Get the basic measurements for a board
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.GameBoard.measure(board)
+      {5, 5, 2, 2}
   """
   def measure(board) do
     total_y = board |> Map.keys() |> Enum.count()
@@ -158,6 +247,28 @@ defmodule Wordza.GameBoard do
 
   @doc """
   Convert a board to a 2-dim list matrix of letters
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.GameBoard.to_list(board)
+      [
+        [nil, nil, nil, nil, nil],
+        [nil, nil, nil, nil, nil],
+        [nil, nil, nil, nil, nil],
+        [nil, nil, nil, nil, nil],
+        [nil, nil, nil, nil, nil]
+      ]
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.GameBoard.to_list(board, :bonus)
+      [
+        [:tw, nil, :tl, nil, :tw],
+        [nil, :dw, nil, :dw, nil],
+        [:dl, nil, :st, nil, :dl],
+        [nil, :dw, nil, :dw, nil],
+        [:tw, nil, :tl, nil, :tw]
+      ]
   """
   def to_list(board, key \\ :letter) do
     board
@@ -169,7 +280,42 @@ defmodule Wordza.GameBoard do
   end
 
   @doc """
+  Convert a board to a flat list of y+x pairs
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.GameBoard.to_yx_list(board)
+      [
+        [0, 0], [0, 1], [0, 2], [0, 3], [0, 4],
+        [1, 0], [1, 1], [1, 2], [1, 3], [1, 4],
+        [2, 0], [2, 1], [2, 2], [2, 3], [2, 4],
+        [3, 0], [3, 1], [3, 2], [3, 3], [3, 4],
+        [4, 0], [4, 1], [4, 2], [4, 3], [4, 4]
+      ]
+  """
+  def to_yx_list(board) do
+    board
+    |> Enum.map(
+      fn({y, row}) ->
+        Enum.map(row, fn({x, _cell}) -> [y, x] end)
+      end
+    )
+    |> Enum.reduce([], fn(l, acc) -> acc ++ l end)
+  end
+
+  @doc """
   Is a board empty?
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.GameBoard.empty?(board)
+      true
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([3, 3, :letter], "a")
+      iex> Wordza.GameBoard.empty?(board)
+      false
   """
   def empty?(board) do
     board
