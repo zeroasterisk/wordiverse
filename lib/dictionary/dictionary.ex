@@ -36,6 +36,9 @@ defmodule Wordza.Dictionary do
   def is_word_full?(pid, letters) do
     GenServer.call(pid, {:is_word_full?, letters})
   end
+  def get_all_word_starts(pid, letters) do
+    GenServer.call(pid, {:get_all_word_starts, letters})
+  end
 
   ### Server API
   def init(type) do
@@ -45,11 +48,14 @@ defmodule Wordza.Dictionary do
       false -> {:error, "Invalid type supplied to Dictionary init #{type}"}
     end
   end
-  def handle_call({:is_word_start?, str}, _from, state) do
-    {:reply, Wordza.Dictionary.Helpers.is_word_start?(str, state), state}
+  def handle_call({:is_word_start?, letters}, _from, state) do
+    {:reply, Wordza.Dictionary.Helpers.is_word_start?(letters, state), state}
   end
-  def handle_call({:is_word_full?, str}, _from, state) do
-    {:reply, Wordza.Dictionary.Helpers.is_word_full?(str, state), state}
+  def handle_call({:is_word_full?, letters}, _from, state) do
+    {:reply, Wordza.Dictionary.Helpers.is_word_full?(letters, state), state}
+  end
+  def handle_call({:get_all_word_starts, letters}, _from, state) do
+    {:reply, Wordza.Dictionary.Helpers.get_all_word_starts(letters, state), state}
   end
 
 end
@@ -97,9 +103,9 @@ defmodule Wordza.Dictionary.Helpers do
   def is_word_start?([], _state), do: :no
   def is_word_start?(letters, dict) do
     letters = clean_letters(letters)
-    found = lookup(letters, dict)
+    found = dict |> get_in(letters) |> is_map()
     # if we found all of the letters
-    case found == letters do
+    case found do
       true -> :ok
       false -> :invalid
     end
@@ -116,9 +122,9 @@ defmodule Wordza.Dictionary.Helpers do
     letters = clean_letters(letters)
     # append the :EOW indicator, so we must find that as well
     letters = letters ++ [:EOW]
-    found = lookup(letters, dict)
+    found = dict |> get_in(letters) == true
     # if we found all of the letters
-    case found == letters do
+    case found do
       true -> :ok
       false -> :invalid
     end
@@ -135,19 +141,19 @@ defmodule Wordza.Dictionary.Helpers do
     |> Enum.map(&String.upcase/1)
   end
 
-  # lookup letters "tofind" and return all "found" letters in the dictionary
-  # the dictionary must be structures as a nested lookup map
-  defp lookup(tofind, dict), do: lookup(tofind, dict, [])
-  defp lookup([] = _tofind, _dict, found), do: Enum.reverse(found)
-  defp lookup(tofind, dict, found) do
-    {letter, tofind} = tofind |> List.pop_at(0)
-    case Map.has_key?(dict, letter) do
-      # TODO review this... we are Map.get for the whole dictionary, letter by letter
-      #   this could be really RAM intensive... unsure, need to profile
-      #   alternative would be to find a way to lookup by every letter in found
-      #   like: dict["a"]["l"]["l"]
-      true -> lookup(tofind, Map.get(dict, letter), [letter | found])
-      false -> []
+  @doc """
+  Return the all of the first letters that match in a set of letters
+  """
+  def starts_with_lookup([], _dict), do: []
+  def starts_with_lookup(letters, dict) do
+    found = get_in(dict, letters)
+    cond do
+      found == true -> letters
+      is_map(found) -> letters
+      true ->
+        letters
+        |> Enum.slice(0, Enum.count(letters) - 1)
+        |> starts_with_lookup(dict)
     end
   end
 
@@ -163,6 +169,24 @@ defmodule Wordza.Dictionary.Helpers do
     letters = letters ++ [:EOW]
     # convert the letters into Access.key functions, setting default values as %{}
     keys = letters |> Enum.map(fn(l) -> Access.key(l, %{}) end)
-    put_in(dict, keys, nil)
+    put_in(dict, keys, true)
+  end
+
+  @doc """
+  Find all possible word_starts for a list of letters
+
+  NOTE this may be expensive, 7! = 5040 (but is usually not that bad)
+
+  NOTE this doesn't work with blanks...
+  """
+  def get_all_word_starts(letters, dict) do
+    letters
+    |> clean_letters()
+    |> Enum.slice(0, 12)
+    |> Comb.permutations()
+    |> Enum.to_list()
+    |> Enum.map(fn(l) -> starts_with_lookup(l, dict) end)
+    |> Enum.uniq()
+    |> Enum.filter(fn(l) -> Enum.count(l) > 0 end)
   end
 end

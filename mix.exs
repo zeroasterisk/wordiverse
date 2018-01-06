@@ -28,6 +28,7 @@ defmodule Wordza.Mixfile do
     [
       {:mix_test_watch, "~> 0.5", only: :dev, runtime: false},
       {:credo, "~> 0.8", only: [:dev, :test], runtime: false},
+      {:comb, github: "tallakt/comb"},
       {:timex, "~> 3.1"},
     ]
   end

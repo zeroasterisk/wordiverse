@@ -22,6 +22,17 @@ defmodule GameDictionaryTest do
     assert Wordza.Dictionary.is_word_full?(pid, "al") == :invalid
     assert Wordza.Dictionary.is_word_full?(pid, "alll") == :invalid
   end
+  test "basic get_all_word_starts for a mock dictionary" do
+    {:ok, pid} = Wordza.Dictionary.start_link(:mock)
+    letters = ["L", "B", "D", "A", "N", "A", "L"]
+    assert Wordza.Dictionary.get_all_word_starts(pid, letters) == [
+      ["A", "L"],
+      ["A"],
+      ["A", "L", "A"],
+      ["A", "L", "A", "N"],
+      ["A", "L", "L"],
+    ]
+  end
 
 end
 
@@ -32,16 +43,29 @@ defmodule GameDictionaryHelpersTest do
   defp mock_dictionary() do
     %{
       "A" => %{
-        :EOW => nil,
+        :EOW => true,
         "L" => %{
           "L" => %{
-            :EOW => nil
+            :EOW => true
           },
           "A" => %{
             "N" => %{
-              :EOW => nil
+              :EOW => true
             }
           }
+        }
+      }
+    }
+  end
+
+  test "basic add word to dictionary" do
+    dict = %{}
+    assert Wordza.Dictionary.Helpers.add_to_dict(dict, "all") == %{
+      "A" => %{
+        "L" => %{
+          "L" => %{
+            :EOW => true
+          },
         }
       }
     }
@@ -66,16 +90,39 @@ defmodule GameDictionaryHelpersTest do
     assert Wordza.Dictionary.Helpers.is_word_full?("alan", dict) == :ok
   end
 
-  test "basic add word to dictionary" do
-    dict = %{}
-    assert Wordza.Dictionary.Helpers.add_to_dict(dict, "all") == %{
-      "A" => %{
-        "L" => %{
-          "L" => %{
-            :EOW => nil
-          },
-        }
-      }
-    }
+  test "basic starts_with_lookup for a mock dictionary, ensure we find 'ALL'+EOW" do
+    dict = mock_dictionary()
+    assert Wordza.Dictionary.Helpers.starts_with_lookup(["A"], dict) == ["A"]
+    assert Wordza.Dictionary.Helpers.starts_with_lookup(["A", "L"], dict) == ["A", "L"]
+    assert Wordza.Dictionary.Helpers.starts_with_lookup(["A", "L", "L"], dict) == ["A", "L", "L"]
+    assert Wordza.Dictionary.Helpers.starts_with_lookup(["A", "L", "L", :EOW], dict) == ["A", "L", "L", :EOW]
+  end
+  test "basic starts_with_lookup for a mock dictionary, returns up until nothing else found" do
+    dict = mock_dictionary()
+    assert Wordza.Dictionary.Helpers.starts_with_lookup(["A", "L", "X"], dict) == ["A", "L"]
+  end
+
+  test "basic get_all_word_starts from a list of letters" do
+    dict = mock_dictionary()
+    letters = ["L", "B", "D", "A", "N"]
+    assert Wordza.Dictionary.Helpers.get_all_word_starts(letters, dict) == [
+      ["A", "L"],
+      ["A"]
+    ]
+    letters = ["L", "B", "D", "A", "N", "A"]
+    assert Wordza.Dictionary.Helpers.get_all_word_starts(letters, dict) == [
+      ["A", "L"],
+      ["A"],
+      ["A", "L", "A"],
+      ["A", "L", "A", "N"],
+    ]
+    letters = ["L", "B", "D", "A", "N", "A", "L"]
+    assert Wordza.Dictionary.Helpers.get_all_word_starts(letters, dict) == [
+      ["A", "L"],
+      ["A"],
+      ["A", "L", "A"],
+      ["A", "L", "A", "N"],
+      ["A", "L", "L"],
+    ]
   end
 end
