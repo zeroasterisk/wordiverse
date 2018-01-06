@@ -103,4 +103,54 @@ defmodule Wordza.BotBits do
     |> Enum.filter(fn([y, x]) -> start_yx_possible?(board, y, x, tiles_in_tray) end)
   end
 
+  @doc """
+  Get all the possible word-starts for a set of letters
+
+  letters = ["L", "B", "D", "A", "N", "A", "L"]
+  Wordza.BotBits.get_all_word_starts(letters, type)
+  """
+  def get_all_word_starts(letters, type) do
+    # get Dictionary of type
+    # get_all_word_starts for that type
+    # if "?" in letters, sub with each letter of alphabet and join results
+    case Enum.member?(letters, "?") do
+      false -> Wordza.Dictionary.get_all_word_starts(type, letters)
+      true ->
+        words = Wordza.Dictionary.get_all_word_starts(type, letters)
+        Enum.reduce(expand_blank("?", []), words, fn(letter, words) ->
+          [
+            Wordza.Dictionary.get_all_word_starts(type, [letter | letters])
+            | words
+          ]
+        end)
+    end
+  end
+
+
+  @doc """
+  Expand blanks, into a list of letters
+
+  ## Examples
+
+      iex> Wordza.BotBits.expand_blanks(["A", "B", "C"])
+      ["A", "B", "C"]
+
+      iex> Wordza.BotBits.expand_blanks(["A", "?", "C"])
+      ["A", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "C"]
+  """
+  def expand_blanks(letters) do
+    case Enum.member?(letters, "?") do
+      false -> letters
+      true -> Enum.reduce(letters, [], &expand_blank/2) |> Enum.reverse()
+    end
+  end
+  defp expand_blank("?", acc) do
+    [
+      "Z", "Y", "X", "W", "V", "U", "T", "S", "R", "Q", "P", "O", "N",
+      "M", "L", "K", "J", "I", "H", "G", "F", "E", "D", "C", "B", "A"
+      | acc
+    ]
+  end
+  defp expand_blank(letter, acc), do: [letter | acc]
+
 end

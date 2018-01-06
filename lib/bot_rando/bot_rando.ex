@@ -64,10 +64,6 @@ defmodule Wordza.BotRando do
   end
 
   @doc """
-
-  """
-
-  @doc """
   Pick an X & Y to start the play
 
   If this is the first play of the board,
