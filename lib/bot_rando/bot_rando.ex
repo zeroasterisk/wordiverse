@@ -24,8 +24,8 @@ defmodule Wordza.BotRando do
     tiles_in_tray: nil,
     board: nil,
     total_y: nil,
-    total_x: nil, 
-    center_y: nil, 
+    total_x: nil,
+    center_y: nil,
     center_x: nil,
     first_play?: false,
     valid_plays: [],
@@ -56,8 +56,8 @@ defmodule Wordza.BotRando do
       center_y: center_y,
       center_x: center_x,
       first_play?: GameBoard.empty?(board),
-    } 
-    # TODO build out an Task.await or genserver 
+    }
+    # TODO build out an Task.await or genserver
     # to attmpt multiple variations and maintain state across them
     pick_start_yx(bot)
 
@@ -78,20 +78,21 @@ defmodule Wordza.BotRando do
   """
   def pick_start_yx(%BotRando{
     first_play?: true,
-    center_y: center_y, 
-    center_x: center_x, 
+    center_y: center_y,
+    center_x: center_x,
   }) do
     [center_y, center_x]
   end
   def pick_start_yx(%BotRando{
+    tiles_in_tray: tiles_in_tray,
     board: board,
   } = bot) do
     # TODO REFACTOR to first get a list of all valid starts, and then random, walk through them to pick (more setup, less cycling & validating)
     [y, x] = bot |> random_yx()
     # if the spot nas nil for a letter, it's valid
-    case BotBits.start_yx_possible?(board, y, x) do
+    case BotBits.start_yx_possible?(board, y, x, tiles_in_tray) do
       true -> [y, x]
-      _ -> 
+      _ ->
         # Logger.warn "got a bad Y+X, #{y}+#{x}, recycle"
         pick_start_yx(bot)
     end
