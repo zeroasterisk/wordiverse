@@ -19,7 +19,19 @@ defmodule Wordza.GamePlay do
   ]
 
   @doc """
-  Create a new play
+  Create a new GamePlay (does not verify)
+
+  ## Examples
+
+      iex> letters_yx = [["a", 0, 2], ["l", 1, 2], ["l", 2, 2]]
+      iex> Wordza.GamePlay.create(:player_1, letters_yx)
+      %Wordza.GamePlay{
+        player_key: :player_1,
+        letters_yx: [["a", 0, 2], ["l", 1, 2], ["l", 2, 2]],
+        score: 0,
+        valid: nil,
+        errors: [],
+      }
   """
   def create(player_key, letters_yx) do
     %Wordza.GamePlay{
