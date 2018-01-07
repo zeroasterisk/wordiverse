@@ -144,7 +144,6 @@ defmodule Wordza.BotBits do
     end
   end
 
-
   @doc """
   Expand blanks, into a list of letters
 
@@ -170,5 +169,65 @@ defmodule Wordza.BotBits do
     ]
   end
   defp expand_blank(letter, acc), do: [letter | acc]
+
+  @doc """
+  Given a start_yx determine length of word_start until played tile in the "y" direction
+  Then return the count of letters between, and the played square
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([2, 2, :letter], "A")
+      iex> Wordza.BotBits.start_yx_count_y_until_played(board, 0, 2)
+      2
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([2, 2, :letter], "A")
+      iex> Wordza.BotBits.start_yx_count_y_until_played(board, 1, 2)
+      1
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([2, 2, :letter], "A")
+      iex> Wordza.BotBits.start_yx_count_y_until_played(board, 1, 3)
+      0
+  """
+  def start_yx_count_y_until_played(board, y, x, plus_y \\ 1) do
+    total_y = board |> Enum.count()
+    case plus_y >= total_y do
+      true -> 0
+      false ->
+        case yx_played?(board, y + plus_y, x) do
+          true -> plus_y
+          false -> start_yx_count_y_until_played(board, y, x, plus_y + 1)
+        end
+    end
+  end
+
+  @doc """
+  Given a start_yx determine length of word_start until played tile in the "y" direction
+  Then return the count of letters between, and the played square
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([2, 2, :letter], "A")
+      iex> Wordza.BotBits.start_yx_count_x_until_played(board, 2, 0)
+      2
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([2, 2, :letter], "A")
+      iex> Wordza.BotBits.start_yx_count_x_until_played(board, 2, 1)
+      1
+
+      iex> board = Wordza.GameBoard.create(:mock) |> put_in([2, 2, :letter], "A")
+      iex> Wordza.BotBits.start_yx_count_x_until_played(board, 0, 1)
+      0
+  """
+  def start_yx_count_x_until_played(board, y, x, plus_x \\ 1) do
+    total_x = board[0] |> Enum.count()
+    case plus_x >= total_x do
+      true -> 0
+      false ->
+        case yx_played?(board, y, x + plus_x) do
+          true -> plus_x
+          false -> start_yx_count_x_until_played(board, y, x, plus_x + 1)
+        end
+    end
+  end
 
 end
