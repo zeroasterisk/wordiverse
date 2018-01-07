@@ -16,91 +16,124 @@ defmodule Wordza.GameTiles do
   """
 
   @doc """
-  create tiles (based on game type)
+  Create a standard set of tiles (based on game type)
 
-http://www.wordfeudrules.com/WordfeudRulePage.aspx
+  http://www.wordfeudrules.com/WordfeudRulePage.aspx
+
+  ## Examples
+
+      iex> Wordza.GameTiles.create(:mock)
+      [
+        %Wordza.GameTile{letter: "A", value: 1},
+        %Wordza.GameTile{letter: "A", value: 1},
+        %Wordza.GameTile{letter: "A", value: 1},
+        %Wordza.GameTile{letter: "L", value: 1},
+        %Wordza.GameTile{letter: "L", value: 1},
+        %Wordza.GameTile{letter: "L", value: 1},
+        %Wordza.GameTile{letter: "N", value: 1},
+        %Wordza.GameTile{letter: "N", value: 1},
+        %Wordza.GameTile{letter: "N", value: 1}
+      ]
   """
   def create(:wordfeud) do
-    list = []
-    list = add(list, "a", 1, 10)
-    list = add(list, "b", 4, 2)
-    list = add(list, "c", 4, 2)
-    list = add(list, "d", 2, 5)
-    list = add(list, "e", 1, 12)
-    list = add(list, "f", 4, 2)
-    list = add(list, "g", 3, 3)
-    list = add(list, "h", 4, 3)
-    list = add(list, "i", 1, 9)
-    list = add(list, "j", 10, 1)
-    list = add(list, "k", 5, 1)
-    list = add(list, "l", 1, 4)
-    list = add(list, "m", 3, 2)
-    list = add(list, "n", 1, 6)
-    list = add(list, "o", 1, 7)
-    list = add(list, "p", 4, 2)
-    list = add(list, "q", 10, 1)
-    list = add(list, "r", 1, 6)
-    list = add(list, "s", 1, 5)
-    list = add(list, "t", 1, 7)
-    list = add(list, "u", 2, 4)
-    list = add(list, "v", 4, 2)
-    list = add(list, "w", 4, 2)
-    list = add(list, "x", 4, 1)
-    list = add(list, "y", 4, 2)
-    list = add(list, "z", 10, 1)
-    list = add(list, "?", 0, 2)
-    Enum.reverse(list)
+    []
+    |> add("A", 1, 10)
+    |> add("B", 4, 2)
+    |> add("C", 4, 2)
+    |> add("D", 2, 5)
+    |> add("E", 1, 12)
+    |> add("F", 4, 2)
+    |> add("G", 3, 3)
+    |> add("H", 4, 3)
+    |> add("I", 1, 9)
+    |> add("J", 10, 1)
+    |> add("K", 5, 1)
+    |> add("L", 1, 4)
+    |> add("M", 3, 2)
+    |> add("N", 1, 6)
+    |> add("O", 1, 7)
+    |> add("P", 4, 2)
+    |> add("Q", 10, 1)
+    |> add("R", 1, 6)
+    |> add("S", 1, 5)
+    |> add("T", 1, 7)
+    |> add("U", 2, 4)
+    |> add("V", 4, 2)
+    |> add("W", 4, 2)
+    |> add("X", 4, 1)
+    |> add("Y", 4, 2)
+    |> add("Z", 10, 1)
+    |> add("?", 0, 2)
+    |> Enum.reverse()
   end
   def create(:scrabble) do
-    list = []
-    list = add(list, "a", 1, 9)
-    list = add(list, "b", 3, 2)
-    list = add(list, "c", 3, 2)
-    list = add(list, "d", 2, 4)
-    list = add(list, "e", 1, 12)
-    list = add(list, "f", 4, 2)
-    list = add(list, "g", 2, 3)
-    list = add(list, "h", 4, 2)
-    list = add(list, "i", 1, 9)
-    list = add(list, "j", 8, 1)
-    list = add(list, "k", 5, 1)
-    list = add(list, "l", 1, 4)
-    list = add(list, "m", 3, 2)
-    list = add(list, "n", 1, 6)
-    list = add(list, "o", 1, 8)
-    list = add(list, "p", 3, 2)
-    list = add(list, "q", 10, 1)
-    list = add(list, "r", 1, 6)
-    list = add(list, "s", 1, 4)
-    list = add(list, "t", 1, 6)
-    list = add(list, "u", 1, 4)
-    list = add(list, "v", 4, 2)
-    list = add(list, "w", 4, 2)
-    list = add(list, "x", 8, 1)
-    list = add(list, "y", 4, 2)
-    list = add(list, "z", 10, 1)
-    list = add(list, "?", 0, 2)
-    Enum.reverse(list)
+    []
+    |> add("A", 1, 9)
+    |> add("B", 3, 2)
+    |> add("C", 3, 2)
+    |> add("D", 2, 4)
+    |> add("E", 1, 12)
+    |> add("F", 4, 2)
+    |> add("G", 2, 3)
+    |> add("H", 4, 2)
+    |> add("I", 1, 9)
+    |> add("J", 8, 1)
+    |> add("K", 5, 1)
+    |> add("L", 1, 4)
+    |> add("M", 3, 2)
+    |> add("N", 1, 6)
+    |> add("O", 1, 8)
+    |> add("P", 3, 2)
+    |> add("Q", 10, 1)
+    |> add("R", 1, 6)
+    |> add("S", 1, 4)
+    |> add("T", 1, 6)
+    |> add("U", 1, 4)
+    |> add("V", 4, 2)
+    |> add("W", 4, 2)
+    |> add("X", 8, 1)
+    |> add("Y", 4, 2)
+    |> add("Z", 10, 1)
+    |> add("?", 0, 2)
+    |> Enum.reverse()
   end
   def create(:mock) do
-    list = []
-    list = add(list, "a", 1, 10)
-    list = add(list, "l", 1, 10)
-    list = add(list, "n", 1, 10)
-    Enum.reverse(list)
+    []
+    |> add("A", 1, 3)
+    |> add("L", 1, 3)
+    |> add("N", 1, 3)
+    |> Enum.reverse()
   end
-
-  def add(tiles, _letter, _value, 0 = _count), do: tiles
-  def add(tiles, letter, value, count) do
-    [
-      %Wordza.GameTile{letter: letter, value: value}
-      |
-      add(tiles, letter, value, (count - 1))
-    ]
+  def create(:mock_tray) do
+    []
+    |> add("A", 1, 2)
+    |> add("L", 1, 2)
+    |> add("N", 1, 1)
+    |> Enum.reverse()
   end
 
   @doc """
-  get random tiles until the player has 7
+  Add a count of tiles to a list of tiles
+
+  ## Examples
+
+      iex> Wordza.GameTiles.add([], "A", 3, 1)
+      [%Wordza.GameTile{letter: "A", value: 3}]
+
+      iex> Wordza.GameTiles.add([], "A", 3, 3)
+      [
+        %Wordza.GameTile{letter: "A", value: 3},
+        %Wordza.GameTile{letter: "A", value: 3},
+        %Wordza.GameTile{letter: "A", value: 3},
+      ]
+  """
+  def add(tiles, _letter, _value, 0 = _count), do: tiles
+  def add(tiles, letter, value, count) do
+    [%Wordza.GameTile{letter: letter, value: value} | add(tiles, letter, value, (count - 1))]
+  end
+
+  @doc """
+  Get random tiles until the player has 7
 
   ## Examples
 
@@ -126,25 +159,28 @@ http://www.wordfeudrules.com/WordfeudRulePage.aspx
   end
 
   @doc """
-  get a set of tiles from another set, only if all are available
+  Get a set of tiles from another set, only if all are available
+
+  This allows us to remove tiles for a play, and gives us the remaining tiles
+
+  If the player does not have the correct tiles, no changes are made
 
   ## Examples
 
-      iex> word = ["a", "l"]
-      iex> tray = ["a", "l", "b", "d", "n", "l"]
+      iex> word = ["A", "L"]
+      iex> tray = ["A", "L", "B", "D", "N", "L"]
       iex> Wordza.GameTiles.take_from_tray(tray, word)
-      {["a", "l"], ["b", "d", "n", "l"]}
+      {["A", "L"], ["B", "D", "N", "L"]}
 
-      iex> word = ["a", "l", "l"]
-      iex> tray = ["a", "l", "b", "d", "n", "l"]
+      iex> word = ["A", "L", "L"]
+      iex> tray = ["A", "L", "B", "D", "N", "L"]
       iex> Wordza.GameTiles.take_from_tray(tray, word)
-      {["a", "l", "l"], ["b", "d", "n"]}
+      {["A", "L", "L"], ["B", "D", "N"]}
 
-      iex> word = ["a", "l", "a", "n"]
-      iex> tray = ["a", "l", "b", "d", "n", "l"]
+      iex> word = ["A", "L", "A", "N"]
+      iex> tray = ["A", "L", "B", "D", "N", "L"]
       iex> Wordza.GameTiles.take_from_tray(tray, word)
-      {[], ["a", "l", "b", "d", "n", "l"]}
-
+      {[], ["A", "L", "B", "D", "N", "L"]}
   """
   def take_from_tray(tray, word) when is_list(tray) and is_list(word) do
     {status, word_taken, tray_left} = take_from_tray([], tray, word)
