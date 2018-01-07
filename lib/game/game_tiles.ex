@@ -14,6 +14,8 @@ defmodule Wordza.GameTiles do
   This is our Wordza GameTiles
   The configuration of all avaialable tiles.
   """
+  require Logger
+  alias Wordza.GameTiles
 
   @doc """
   Create a standard set of tiles (based on game type)
@@ -129,8 +131,35 @@ defmodule Wordza.GameTiles do
   """
   def add(tiles, _letter, _value, 0 = _count), do: tiles
   def add(tiles, letter, value, count) do
-    [%Wordza.GameTile{letter: letter, value: value} | add(tiles, letter, value, (count - 1))]
+    [%Wordza.GameTile{letter: clean_letter(letter), value: value} | add(tiles, letter, value, (count - 1))]
   end
+  # clean a letter or a Tile, get an upper case single letter out
+  defp clean_letter(%Wordza.GameTile{letter: letter}), do: clean_letter(letter)
+  defp clean_letter(letter) when is_bitstring(letter) do
+    letter |> String.upcase()
+  end
+  defp clean_letter(letter) do
+    Logger.error fn() -> "GameTiles.clean_letter invalid input #{inspect(letter)}" end
+    ""
+  end
+
+  @doc """
+  Add a list of tuples for letters
+
+  ### Examples
+
+      iex> Wordza.GameTiles.add_tuples([], [{"A", 1}, {"L", 1, 2}, {"D", 2}])
+      [
+        %Wordza.GameTile{letter: "A", value: 1},
+        %Wordza.GameTile{letter: "L", value: 1},
+        %Wordza.GameTile{letter: "L", value: 1},
+        %Wordza.GameTile{letter: "D", value: 2},
+      ]
+
+  """
+  def add_tuples(tiles, []), do: tiles |> Enum.reverse()
+  def add_tuples(tiles, [{letter, value, count} | tuples]), do: tiles |> add(letter, value, count) |> add_tuples(tuples)
+  def add_tuples(tiles, [{letter, value} | tuples]), do: tiles |> add(letter, value, 1) |> add_tuples(tuples)
 
   @doc """
   Get random tiles until the player has 7
@@ -167,40 +196,128 @@ defmodule Wordza.GameTiles do
 
   ## Examples
 
-      iex> word = ["A", "L"]
-      iex> tray = ["A", "L", "B", "D", "N", "L"]
-      iex> Wordza.GameTiles.take_from_tray(tray, word)
-      {["A", "L"], ["B", "D", "N", "L"]}
+      iex> letters = ["A", "L"]
+      iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}, {"B", 2}, {"D", 2}, {"N", 2}])
+      iex> Wordza.GameTiles.take_from_tray(tray, letters)
+      {
+        [
+          %Wordza.GameTile{letter: "A", value: 1},
+          %Wordza.GameTile{letter: "L", value: 1},
+        ],
+        [
+          %Wordza.GameTile{letter: "L", value: 1},
+          %Wordza.GameTile{letter: "B", value: 2},
+          %Wordza.GameTile{letter: "D", value: 2},
+          %Wordza.GameTile{letter: "N", value: 2},
+        ]
+      }
 
-      iex> word = ["A", "L", "L"]
-      iex> tray = ["A", "L", "B", "D", "N", "L"]
-      iex> Wordza.GameTiles.take_from_tray(tray, word)
-      {["A", "L", "L"], ["B", "D", "N"]}
+      iex> letters = ["A", "L", "L"]
+      iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}, {"B", 2}, {"D", 2}, {"N", 2}])
+      iex> Wordza.GameTiles.take_from_tray(tray, letters)
+      {
+        [
+          %Wordza.GameTile{letter: "A", value: 1},
+          %Wordza.GameTile{letter: "L", value: 1},
+          %Wordza.GameTile{letter: "L", value: 1},
+        ],
+        [
+          %Wordza.GameTile{letter: "B", value: 2},
+          %Wordza.GameTile{letter: "D", value: 2},
+          %Wordza.GameTile{letter: "N", value: 2},
+        ]
+      }
 
-      iex> word = ["A", "L", "A", "N"]
-      iex> tray = ["A", "L", "B", "D", "N", "L"]
-      iex> Wordza.GameTiles.take_from_tray(tray, word)
-      {[], ["A", "L", "B", "D", "N", "L"]}
+      iex> letters = ["A", "L", "J"]
+      iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}, {"B", 2}, {"D", 2}, {"N", 2}])
+      iex> Wordza.GameTiles.take_from_tray(tray, letters)
+      {
+        [],
+        [
+          %Wordza.GameTile{letter: "A", value: 1},
+          %Wordza.GameTile{letter: "L", value: 1},
+          %Wordza.GameTile{letter: "L", value: 1},
+          %Wordza.GameTile{letter: "B", value: 2},
+          %Wordza.GameTile{letter: "D", value: 2},
+          %Wordza.GameTile{letter: "N", value: 2},
+        ]
+      }
   """
-  def take_from_tray(tray, word) when is_list(tray) and is_list(word) do
-    {status, word_taken, tray_left} = take_from_tray([], tray, word)
+  def take_from_tray(tray, letters) when is_list(tray) and is_list(letters) do
+    {status, letters_taken, tray_left} = take_from_tray([], tray, letters)
     case status do
-      :ok -> {word_taken, tray_left}
+      :ok -> {letters_taken, tray_left}
       :error -> {[], tray}
     end
   end
-  def take_from_tray(word_taken, tray, [] = _word_left) do
-    {:ok, Enum.reverse(word_taken), tray}
+  def take_from_tray(letters_taken, tray, [] = _letters_left) do
+    {:ok, Enum.reverse(letters_taken), tray}
   end
-  def take_from_tray(word_taken, tray, [letter | word_left]) do
-    case Enum.member?(tray, letter) do
-      true -> take_from_tray(
-        [letter | word_taken],
-        List.delete(tray, letter),
-        word_left
+  def take_from_tray(letters_taken, tray, [letter | letters_left]) do
+    {letter, tray} = pop_letter(tray, clean_letter(letter))
+    case letter do
+      nil -> {:error, [], []}
+      _ -> take_from_tray(
+        [letter | letters_taken],
+        tray,
+        letters_left
       )
-      false -> {:error, [], []}
     end
+  end
+
+  # def member?(tray, letter) when is_bitstring(letter) do
+  #   tray |> Enum.any?(fn(tray_letter) -> clean_letter(tray_letter.letter) == clean_letter(letter) end)
+  # end
+
+  @doc """
+  Pop a single letter from a Tray of tiles, like List.pop_at()
+
+  ## Examples
+
+      iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}])
+      iex> Wordza.GameTiles.pop_letter(tray, "L")
+      {
+        %Wordza.GameTile{letter: "L", value: 1},
+        [
+          %Wordza.GameTile{letter: "A", value: 1},
+          %Wordza.GameTile{letter: "L", value: 1},
+        ]
+      }
+
+      iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}])
+      iex> Wordza.GameTiles.pop_letter(tray, %Wordza.GameTile{letter: "L", value: 1})
+      {
+        %Wordza.GameTile{letter: "L", value: 1},
+        [
+          %Wordza.GameTile{letter: "A", value: 1},
+          %Wordza.GameTile{letter: "L", value: 1},
+        ]
+      }
+  """
+  def pop_letter(tray, %Wordza.GameTile{letter: letter}), do: pop_letter(tray, letter)
+  def pop_letter(tray, letter) when is_bitstring(letter) and is_list(tray) do
+    index = tray |> Enum.find_index(fn(tray_letter) -> match_letter?(tray_letter, letter) end)
+    case index do
+      nil -> {nil, tray}
+      _ -> List.pop_at(tray, index)
+    end
+  end
+  def pop_letter(tray, letter) do
+    Logger.error fn() -> "GameTiles.pop_letter invalid input #{inspect(letter)}" end
+    {nil, tray}
+  end
+
+  @doc """
+  Safely compare 2 letters or tiles (or a mis-matched type) via clean_letter()
+
+  ## Examples
+
+      iex> Wordza.GameTiles.match_letter?("a", "A")
+      true
+
+  """
+  def match_letter?(letter_1, letter_2) do
+    clean_letter(letter_1) == clean_letter(letter_2)
   end
 
 end
