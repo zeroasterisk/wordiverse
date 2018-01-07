@@ -106,23 +106,41 @@ defmodule Wordza.BotBits do
   @doc """
   Get all the possible word-starts for a set of letters
 
-  letters = ["L", "B", "D", "A", "N", "A", "L"]
-  Wordza.BotBits.get_all_word_starts(letters, type)
+  If "?" in letters, sub with each letter of alphabet and join results
+
+  ## Examples
+
+      iex> {:ok, _pid} = Wordza.Dictionary.start_link(:mock)
+      iex> letters = ["L", "B", "D", "A", "N", "L"]
+      iex> Wordza.BotBits.get_all_word_starts(letters, :mock)
+      [
+          ["A"],
+          ["A", "L"],
+          ["A", "L", "L"],
+      ]
   """
   def get_all_word_starts(letters, type) do
-    # get Dictionary of type
-    # get_all_word_starts for that type
-    # if "?" in letters, sub with each letter of alphabet and join results
     case Enum.member?(letters, "?") do
-      false -> Wordza.Dictionary.get_all_word_starts(type, letters)
+      false ->
+        type
+        |> Wordza.Dictionary.get_all_word_starts(letters)
+        |> Enum.uniq()
+        |> Enum.sort()
       true ->
+        # TODO what if there are multiple "?"
+        #  IDEA get a normal list of all words without the "?"
+        #       and for each "?" add every possible "next" letter to every word
         words = Wordza.Dictionary.get_all_word_starts(type, letters)
-        Enum.reduce(expand_blank("?", []), words, fn(letter, words) ->
-          [
+        Enum.reduce(
+          expand_blanks(Enum.filter(letters, fn(l) -> l == "?" end)),
+          words,
+          fn(letter, words) ->
             Wordza.Dictionary.get_all_word_starts(type, [letter | letters])
-            | words
-          ]
-        end)
+            ++ words
+          end
+        )
+        |> Enum.uniq()
+        |> Enum.sort()
     end
   end
 

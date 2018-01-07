@@ -48,4 +48,40 @@ defmodule BotBitsTest do
     assert BotBits.start_yx_possible?(board, 2, 7, tiles) == true
   end
 
+  test "get_all_word_starts should return every combination of words for letters w/ :mock" do
+    {:ok, _pid} = Wordza.Dictionary.start_link(:mock)
+    letters = ["L", "B", "D", "A", "N", "A", "L"]
+    assert Wordza.BotBits.get_all_word_starts(letters, :mock) == [
+      ["A"],
+      ["A", "L"],
+      ["A", "L", "A"],
+      ["A", "L", "A", "N"],
+      ["A", "L", "L"],
+    ]
+  end
+
+  test "get_all_word_starts should return EVERY combination of words for letters + ? w/ :mock" do
+    {:ok, _pid} = Wordza.Dictionary.start_link(:mock)
+    letters = ["L", "A", "N", "?"]
+    assert Wordza.BotBits.get_all_word_starts(letters, :mock) == [
+      ["A"],
+      ["A", "L"],
+      ["A", "L", "A"],
+      ["A", "L", "A", "N"],
+      ["A", "L", "L"],
+    ]
+  end
+
+  # test "get_all_word_starts should return EVERY combination of words for letters + ? + ? w/ :mock" do
+  #   {:ok, _pid} = Wordza.Dictionary.start_link(:mock)
+  #   letters = ["L", "A", "?", "?"]
+  #   assert Wordza.BotBits.get_all_word_starts(letters, :mock) == [
+  #     ["A"],
+  #     ["A", "L"],
+  #     ["A", "L", "A"],
+  #     ["A", "L", "A", "N"],
+  #     ["A", "L", "L"],
+  #   ]
+  # end
+
 end
