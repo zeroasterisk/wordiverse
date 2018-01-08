@@ -21,7 +21,10 @@ defmodule Wordza.BotRando do
   alias Wordza.GameBoard
 
   defstruct [
+    player_key: :player_1, # TODO <-- get from GameInstance
+    type: nil,
     tiles_in_tray: nil,
+    word_starts: [],
     board: nil,
     total_y: nil,
     total_x: nil,
@@ -45,11 +48,13 @@ defmodule Wordza.BotRando do
     } = _player,
     %GameInstance{
       board: board,
+      type: type,
     } = _game
   ) do
     {total_y, total_x, center_y, center_x} = board |> GameBoard.measure
     bot = %BotRando{
       tiles_in_tray: tiles_in_tray,
+      word_starts: BotBits.get_all_word_starts(tiles_in_tray, type),
       board: board,
       total_y: total_y,
       total_x: total_x,
@@ -109,6 +114,61 @@ defmodule Wordza.BotRando do
       (:rand.uniform(total_x) - 1)
     ]
   end
+
+  @doc """
+  Given a board, set of tile, and a single start_yx
+  Then return a list of all possible plays
+  """
+  # def get_all_plays_for_start_yx(
+  #   %BotRando{board: board, tiles_in_tray: tiles, valid_plays: valid_plays},
+  #   start_yx
+  # ) do
+  # end
+  # def get_all_plays_for_start_yx_on_y(
+  #   %BotRando{
+  #     board: board,
+  #     tiles_in_tray: tiles,
+  #     word_starts: word_starts,
+  #     valid_plays: valid_plays,
+  #   } = bot,
+  #   [y, x] = _start_yx
+  # ) do
+  #   plus_y = Wordza.BotBits.start_yx_count_y_until_played(board, y, x)
+  #   valid_plays = word_starts
+  #   |> Enum.filter(fn(ws) -> Enum.count(ws) == (plus_y - 1) end)
+  #   |> Enum.reduce(valid_plays, fn(word_start, valid_plays) ->
+  #     {word_start, tiles_left} = GameTiles.take_from_tray(tiles, word_start)
+  #     played_letter = board |> get_in([y + plus_y, x, :letter])
+  #     word = word_start ++ [played_letter]
+  #     get_all_plays_for_start_yx_on_y_for_word_start(bot, valid_plays, word, tiles_left, y, x, plus_y)
+  #   end)
+  # end
+  # def get_all_plays_for_start_yx_on_y_for_word_start(
+  #   _bot,
+  #   valid_plays,
+  #   _word,
+  #   [] = _tiles,
+  #   _y,
+  #   _x,
+  #   _plus_y
+  # ), do: valid_plays
+  # def get_all_plays_for_start_yx_on_y_for_word_start(
+  #   %BotRando{
+  #     board: board,
+  #     player_key: player_key,
+  #   } = bot,
+  #   valid_plays,
+  #   word,
+  #   player_key,
+  #   tiles,
+  #   board,
+  #   y,
+  #   x,
+  #   plus_y
+  # ) do
+  #   # GamePlay.create(player_key, letters_yx)
+  #   word # TODO <-- make this
+  # end
 
 
 end

@@ -12,6 +12,7 @@ defmodule GamePlayTest do
     assert GamePlay.create(:player_1, word) == %GamePlay{
       player_key: :player_1,
       letters_yx: word,
+      direction: :y,
       score: 0,
       valid: nil,
       errors: [],
@@ -41,10 +42,15 @@ defmodule GamePlayTest do
     end
 
     test "verify a play: all on mock game :start", state do
-      play = GamePlay.verify(state[:play], state[:game])
+      play = state[:play] |> GamePlay.verify(state[:game])
       assert play.valid == true
       assert play.errors == []
-      assert play.letters_in_tray_after_play == ["D", "N", "N", "A"]
+      assert play.letters_in_tray_after_play == [
+        %Wordza.GameTile{letter: "D", value: 1},
+        %Wordza.GameTile{letter: "N", value: 1},
+        %Wordza.GameTile{letter: "N", value: 1},
+        %Wordza.GameTile{letter: "A", value: 1},
+      ]
     end
 
     test "verify_letters_are_valid (good)", state do
@@ -96,7 +102,12 @@ defmodule GamePlayTest do
     test "verify_letters_in_tray (good)", state do
       play = GamePlay.verify_letters_in_tray(state[:play], state[:game])
       assert get_errors(play) == []
-      assert play.letters_in_tray_after_play == ["D", "N", "N", "A"]
+      assert play.letters_in_tray_after_play == [
+        %Wordza.GameTile{letter: "D", value: 1},
+        %Wordza.GameTile{letter: "N", value: 1},
+        %Wordza.GameTile{letter: "N", value: 1},
+        %Wordza.GameTile{letter: "A", value: 1},
+      ]
     end
     test "verify_letters_in_tray (bad)", state do
       play = Map.merge(state[:play], %{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
@@ -202,29 +213,36 @@ defmodule GamePlayTest do
       ) == []
     end
     test "verify_letters_form_full_words (bad - several invalid words)", state do
-      play = Map.merge(state[:play], %{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
       board = state[:game]
               |> Map.get(:board)
               |> put_in([1, 0, :letter], "A")
               |> put_in([1, 1, :letter], "L")
       game = Map.merge(state[:game], %{board: board})
+      play = state[:play]
+             |> Map.merge(%{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
+             |> GamePlay.assign_letters(game)
+             |> GamePlay.assign_words(game)
+
       assert get_errors(
         GamePlay.verify_letters_form_full_words(play, game)
       ) == ["Not In Dictionary, unknown words: NA, OL, NO"]
     end
     test "verify_letters_form_full_words (bad - single invalid word)", state do
-      play = Map.merge(state[:play], %{letters_yx: [
-        ["A", 0, 2],
-        ["L", 1, 2],
-        ["A", 2, 2],
-        ["N", 3, 2],
-        ["J", 4, 2],
-      ]})
       board = state[:game]
               |> Map.get(:board)
               |> put_in([1, 0, :letter], "A")
               |> put_in([1, 1, :letter], "L")
       game = Map.merge(state[:game], %{board: board})
+      play = state[:play]
+             |> Map.merge(%{letters_yx: [
+               ["A", 0, 2],
+               ["L", 1, 2],
+               ["A", 2, 2],
+               ["N", 3, 2],
+               ["J", 4, 2],
+             ]})
+             |> GamePlay.assign_letters(game)
+             |> GamePlay.assign_words(game)
       assert get_errors(
         GamePlay.verify_letters_form_full_words(play, game)
       ) == ["Not In Dictionary, unknown word: ALANJ"]

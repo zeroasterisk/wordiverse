@@ -6,6 +6,8 @@ defmodule Wordza.GameTile do
   defstruct [
     letter: nil,
     value: 1,
+    x: nil,
+    y: nil,
   ]
 end
 
@@ -135,6 +137,7 @@ defmodule Wordza.GameTiles do
   end
   # clean a letter or a Tile, get an upper case single letter out
   defp clean_letter(%Wordza.GameTile{letter: letter}), do: clean_letter(letter)
+  defp clean_letter([letter, y, x]) when is_bitstring(letter) and is_integer(y) and is_integer(x), do: clean_letter(letter)
   defp clean_letter(letter) when is_bitstring(letter) do
     letter |> String.upcase()
   end
@@ -196,6 +199,22 @@ defmodule Wordza.GameTiles do
 
   ## Examples
 
+      iex> letters_yx = [["A", 0, 0], ["L", 0, 1], ["L", 0, 2]]
+      iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}, {"B", 2}, {"D", 2}, {"N", 2}])
+      iex> Wordza.GameTiles.take_from_tray(tray, letters_yx)
+      {
+        [
+          %Wordza.GameTile{letter: "A", value: 1, y: 0, x: 0},
+          %Wordza.GameTile{letter: "L", value: 1, y: 0, x: 1},
+          %Wordza.GameTile{letter: "L", value: 1, y: 0, x: 2},
+        ],
+        [
+          %Wordza.GameTile{letter: "B", value: 2},
+          %Wordza.GameTile{letter: "D", value: 2},
+          %Wordza.GameTile{letter: "N", value: 2},
+        ]
+      }
+
       iex> letters = ["A", "L"]
       iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}, {"B", 2}, {"D", 2}, {"N", 2}])
       iex> Wordza.GameTiles.take_from_tray(tray, letters)
@@ -253,17 +272,37 @@ defmodule Wordza.GameTiles do
   def take_from_tray(letters_taken, tray, [] = _letters_left) do
     {:ok, Enum.reverse(letters_taken), tray}
   end
-  def take_from_tray(letters_taken, tray, [letter | letters_left]) do
-    {letter, tray} = pop_letter(tray, clean_letter(letter))
+  def take_from_tray(letters_taken, tray, [letter_input | letters_left]) do
+    {letter, tray} = pop_letter(tray, clean_letter(letter_input))
     case letter do
       nil -> {:error, [], []}
       _ -> take_from_tray(
-        [letter | letters_taken],
+        [
+          combine_letter_input(letter, letter_input) | letters_taken
+        ],
         tray,
         letters_left
       )
     end
   end
+
+  @doc """
+  As we "take" a tile from a tray, we may have extra information to merge into it
+
+  ## Examples
+
+      iex> Wordza.GameTiles.combine_letter_input(%Wordza.GameTile{letter: "A", value: 1}, "A")
+      %Wordza.GameTile{letter: "A", value: 1}
+
+      iex> Wordza.GameTiles.combine_letter_input(%Wordza.GameTile{letter: "A", value: 1}, ["A", 0, 0])
+      %Wordza.GameTile{letter: "A", value: 1, y: 0, x: 0}
+
+      iex> Wordza.GameTiles.combine_letter_input(%Wordza.GameTile{letter: "A", value: 1}, %{letter: "A", y: 0, x: 0})
+      %Wordza.GameTile{letter: "A", value: 1, y: 0, x: 0}
+  """
+  def combine_letter_input(letter, %{x: x, y: y} = _letter_input), do: letter |> Map.merge(%{x: x, y: y})
+  def combine_letter_input(letter, [_l, y, x] = _letter_input), do: letter |> Map.merge(%{x: x, y: y})
+  def combine_letter_input(letter, _letter_input), do: letter
 
   # def member?(tray, letter) when is_bitstring(letter) do
   #   tray |> Enum.any?(fn(tray_letter) -> clean_letter(tray_letter.letter) == clean_letter(letter) end)
