@@ -17,6 +17,7 @@ defmodule Wordza.GameTiles do
   The configuration of all avaialable tiles.
   """
   require Logger
+  alias Wordza.GameTile
   alias Wordza.GameTiles
 
   @doc """
@@ -241,6 +242,22 @@ defmodule Wordza.GameTiles do
           %Wordza.GameTile{letter: "L", value: 1},
         ],
         [
+          %Wordza.GameTile{letter: "B", value: 2},
+          %Wordza.GameTile{letter: "D", value: 2},
+          %Wordza.GameTile{letter: "N", value: 2},
+        ]
+      }
+
+      iex> letters = [["A", 0, 2], ["L", 1, 2]]
+      iex> tray = [] |> Wordza.GameTiles.add_tuples([{"A", 1}, {"L", 1, 2}, {"B", 2}, {"D", 2}, {"N", 2}])
+      iex> Wordza.GameTiles.take_from_tray(tray, letters)
+      {
+        [
+          %Wordza.GameTile{letter: "A", value: 1, y: 0, x: 2},
+          %Wordza.GameTile{letter: "L", value: 1, y: 1, x: 2},
+        ],
+        [
+          %Wordza.GameTile{letter: "L", value: 1},
           %Wordza.GameTile{letter: "B", value: 2},
           %Wordza.GameTile{letter: "D", value: 2},
           %Wordza.GameTile{letter: "N", value: 2},

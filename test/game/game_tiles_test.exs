@@ -1,25 +1,27 @@
 defmodule GameTilesTest do
   use ExUnit.Case
   doctest Wordza.GameTiles
+  alias Wordza.GameTile
+  alias Wordza.GameTiles
 
   test "add a single tile to a list" do
-    assert Wordza.GameTiles.add([], "A", 1, 1) == [
-      %Wordza.GameTile{letter: "A", value: 1}
+    assert GameTiles.add([], "A", 1, 1) == [
+      %GameTile{letter: "A", value: 1}
     ]
   end
   test "add multiple tiles to a list" do
-    assert Wordza.GameTiles.add([], "B", 2, 3) == [
-      %Wordza.GameTile{letter: "B", value: 2},
-      %Wordza.GameTile{letter: "B", value: 2},
-      %Wordza.GameTile{letter: "B", value: 2}
+    assert GameTiles.add([], "B", 2, 3) == [
+      %GameTile{letter: "B", value: 2},
+      %GameTile{letter: "B", value: 2},
+      %GameTile{letter: "B", value: 2}
     ]
   end
   test "create a list of tiles for :wordfeud" do
-    tiles = Wordza.GameTiles.create(:wordfeud)
+    tiles = GameTiles.create(:wordfeud)
     distro = tiles
     |> Enum.group_by(
-      fn(%Wordza.GameTile{letter: l}) -> l end,
-      fn(%Wordza.GameTile{value: p}) -> p end
+      fn(%GameTile{letter: l}) -> l end,
+      fn(%GameTile{value: p}) -> p end
     )
     |> Enum.map(fn({k, v}) -> {k, Enum.count(v)} end)
     assert distro == [
@@ -29,23 +31,23 @@ defmodule GameTilesTest do
       {"W", 2}, {"X", 1}, {"Y", 2}, {"Z", 1}
     ]
     assert tiles
-    |> Enum.map(fn(%Wordza.GameTile{value: v}) -> v end)
+    |> Enum.map(fn(%GameTile{value: v}) -> v end)
     |> Enum.sum() == 206
     assert Enum.count(tiles) == 104
-    assert Enum.at(tiles, 0) == %Wordza.GameTile{letter: "A", value: 1}
-    assert Enum.at(tiles, 9) == %Wordza.GameTile{letter: "A", value: 1}
-    assert Enum.at(tiles, 10) == %Wordza.GameTile{letter: "B", value: 4}
-    assert Enum.at(tiles, 11) == %Wordza.GameTile{letter: "B", value: 4}
-    assert Enum.at(tiles, 12) == %Wordza.GameTile{letter: "C", value: 4}
-    assert Enum.at(tiles, 103) == %Wordza.GameTile{letter: "?", value: 0}
+    assert Enum.at(tiles, 0) == %GameTile{letter: "A", value: 1}
+    assert Enum.at(tiles, 9) == %GameTile{letter: "A", value: 1}
+    assert Enum.at(tiles, 10) == %GameTile{letter: "B", value: 4}
+    assert Enum.at(tiles, 11) == %GameTile{letter: "B", value: 4}
+    assert Enum.at(tiles, 12) == %GameTile{letter: "C", value: 4}
+    assert Enum.at(tiles, 103) == %GameTile{letter: "?", value: 0}
   end
   test "create a list of tiles for :scrabble" do
-    tiles = Wordza.GameTiles.create(:scrabble)
+    tiles = GameTiles.create(:scrabble)
 
     distro = tiles
     |> Enum.group_by(
-      fn(%Wordza.GameTile{letter: l}) -> l end,
-      fn(%Wordza.GameTile{value: p}) -> p end
+      fn(%GameTile{letter: l}) -> l end,
+      fn(%GameTile{value: p}) -> p end
     )
     |> Enum.map(fn({k, v}) -> {k, Enum.count(v)} end)
     assert distro == [
@@ -55,14 +57,64 @@ defmodule GameTilesTest do
       {"W", 2}, {"X", 1}, {"Y", 2}, {"Z", 1}
     ]
     assert tiles
-    |> Enum.map(fn(%Wordza.GameTile{value: v}) -> v end)
+    |> Enum.map(fn(%GameTile{value: v}) -> v end)
     |> Enum.sum() == 187
     assert Enum.count(tiles) == 100
-    assert Enum.at(tiles, 0) == %Wordza.GameTile{letter: "A", value: 1}
-    assert Enum.at(tiles, 8) == %Wordza.GameTile{letter: "A", value: 1}
-    assert Enum.at(tiles, 9) == %Wordza.GameTile{letter: "B", value: 3}
-    assert Enum.at(tiles, 10) == %Wordza.GameTile{letter: "B", value: 3}
-    assert Enum.at(tiles, 11) == %Wordza.GameTile{letter: "C", value: 3}
-    assert Enum.at(tiles, 99) == %Wordza.GameTile{letter: "?", value: 0}
+    assert Enum.at(tiles, 0) == %GameTile{letter: "A", value: 1}
+    assert Enum.at(tiles, 8) == %GameTile{letter: "A", value: 1}
+    assert Enum.at(tiles, 9) == %GameTile{letter: "B", value: 3}
+    assert Enum.at(tiles, 10) == %GameTile{letter: "B", value: 3}
+    assert Enum.at(tiles, 11) == %GameTile{letter: "C", value: 3}
+    assert Enum.at(tiles, 99) == %GameTile{letter: "?", value: 0}
+  end
+
+  test "take_from_tray should pull out no tiles for this play, because J is not in tray" do
+    letters_yx = [["A", 0, 2], ["L", 1, 2], ["A", 2, 2], ["N", 3, 2], ["J", 4, 2]]
+    tiles_in_tray = [
+      %GameTile{letter: "D", value: 1, x: nil, y: nil},
+      %GameTile{letter: "N", value: 1, x: nil, y: nil},
+      %GameTile{letter: "N", value: 1, x: nil, y: nil},
+      %GameTile{letter: "L", value: 1, x: nil, y: nil},
+      %GameTile{letter: "L", value: 1, x: nil, y: nil},
+      %GameTile{letter: "A", value: 1, x: nil, y: nil},
+      %GameTile{letter: "A", value: 1, x: nil, y: nil},
+    ]
+    assert GameTiles.take_from_tray(tiles_in_tray, letters_yx) == {
+      [],
+      [
+        %GameTile{letter: "D", value: 1, x: nil, y: nil},
+        %GameTile{letter: "N", value: 1, x: nil, y: nil},
+        %GameTile{letter: "N", value: 1, x: nil, y: nil},
+        %GameTile{letter: "L", value: 1, x: nil, y: nil},
+        %GameTile{letter: "L", value: 1, x: nil, y: nil},
+        %GameTile{letter: "A", value: 1, x: nil, y: nil},
+        %GameTile{letter: "A", value: 1, x: nil, y: nil},
+      ]
+    }
+  end
+  test "take_from_tray should pull out the tiles for this play" do
+    letters_yx = [["A", 0, 2], ["L", 1, 2], ["A", 2, 2], ["N", 3, 2]]
+    tiles_in_tray = [
+      %GameTile{letter: "D", value: 1, x: nil, y: nil},
+      %GameTile{letter: "N", value: 1, x: nil, y: nil},
+      %GameTile{letter: "N", value: 1, x: nil, y: nil},
+      %GameTile{letter: "L", value: 1, x: nil, y: nil},
+      %GameTile{letter: "L", value: 1, x: nil, y: nil},
+      %GameTile{letter: "A", value: 1, x: nil, y: nil},
+      %GameTile{letter: "A", value: 1, x: nil, y: nil},
+    ]
+    assert GameTiles.take_from_tray(tiles_in_tray, letters_yx) == {
+      [
+        %GameTile{letter: "A", value: 1, x: 2, y: 0},
+        %GameTile{letter: "L", value: 1, x: 2, y: 1},
+        %GameTile{letter: "A", value: 1, x: 2, y: 2},
+        %GameTile{letter: "N", value: 1, x: 2, y: 3},
+      ],
+      [
+        %GameTile{letter: "D", value: 1, x: nil, y: nil},
+        %GameTile{letter: "N", value: 1, x: nil, y: nil},
+        %GameTile{letter: "L", value: 1, x: nil, y: nil},
+      ]
+    }
   end
 end
