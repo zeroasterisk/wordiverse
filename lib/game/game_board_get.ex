@@ -71,22 +71,16 @@ defmodule Wordza.GameBoardGet do
     # for each letter
     #   find all touching words in row
     #   find all touching words in column
-    words_y = letters_yx |> Enum.map(fn([_letter, y, x]) -> word_for_y(board, y, x) end)
-    words_x = letters_yx |> Enum.map(fn([_letter, y, x]) -> word_for_x(board, y, x) end)
+    words_y = letters_yx |> Enum.map(fn(tile) -> word_for_y(board, tile) end)
+    words_x = letters_yx |> Enum.map(fn(tile) -> word_for_x(board, tile) end)
     words_y ++ words_x |> Enum.uniq() |> Enum.filter(fn(word) -> Enum.count(word) > 1 end)
   end
-  def get_words_for_letter(%{board: board, words: words, scanned: scanned} = proc, y, x, _letter) do
-    case Enum.member?(scanned, [y, x]) do
-      true ->
-        Logger.info "sanned #{x}, #{y}"
-        proc
-      false ->
-        word_y = word_for_y(board, y, x)
-        Map.merge(proc, %{
-          words: [word_y | words],
-        })
-    end
-  end
+
+  @doc """
+  Collect the longest word in the x direction, for a board and a y+x location
+  """
+  def word_for_y(board, [_letter, y, x]), do: word_for_y(board, y, x) # <-- deprecate??
+  def word_for_y(board, %{letter: _letter, y: y, x: x}), do: word_for_y(board, y, x)
   def word_for_y(board, y, x) do
     square = at(board, y, x)
     [square]
@@ -118,6 +112,12 @@ defmodule Wordza.GameBoardGet do
         end
     end
   end
+
+  @doc """
+  Collect the longest word in the y direction, for a board and a y+x location
+  """
+  def word_for_x(board, [_letter, y, x]), do: word_for_x(board, y, x) # <-- deprecate??
+  def word_for_x(board, %{letter: _letter, y: y, x: x}), do: word_for_x(board, y, x)
   def word_for_x(board, y, x) do
     square = at(board, y, x)
     [square]
@@ -147,6 +147,22 @@ defmodule Wordza.GameBoardGet do
             [square | word_part]
             |> word_for_x_right(board, y, (x + 1))
         end
+    end
+  end
+
+  @doc """
+  Get a word, for a letter <-- ? deprecate ?
+  """
+  def get_words_for_letter(%{board: board, words: words, scanned: scanned} = proc, y, x, _letter) do
+    case Enum.member?(scanned, [y, x]) do
+      true ->
+        Logger.info "sanned #{x}, #{y}"
+        proc
+      false ->
+        word_y = word_for_y(board, y, x)
+        Map.merge(proc, %{
+          words: [word_y | words],
+        })
     end
   end
 
