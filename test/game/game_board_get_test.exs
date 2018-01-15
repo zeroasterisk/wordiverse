@@ -54,12 +54,39 @@ defmodule GameBoardGetTest do
     board = board_high_wide()
     assert Wordza.GameBoardGet.touching_words(board, tiles_in_play) == []
   end
-  test "touching_words should return all col/row for letters provided (high,so)" do
+  test "touching_words should return all col/row for letters provided (ds,eo,gso) [funky nested cross]" do
+    tiles_in_play = [
+      %{letter: "S", value: 1, y: 2, x: 2},
+      %{letter: "O", value: 1, y: 2, x: 3},
+    ]
+    board = board_high_wide() |> Wordza.GameBoard.add_letters(tiles_in_play)
+    assert Wordza.GameBoardGet.touching_words(board, tiles_in_play) == [
+      [
+        %{bonus: nil, letter: "D", value: 1, y: 1, x: 2},
+        %{bonus: nil, letter: "S", value: 1, y: 2, x: 2},
+      ],
+      [
+        %{bonus: nil, letter: "E", value: 1, y: 1, x: 3},
+        %{bonus: nil, letter: "O", value: 1, y: 2, x: 3},
+      ],
+      [
+        %{bonus: nil, letter: "G", value: 1, y: 2, x: 1},
+        %{bonus: nil, letter: "S", value: 1, y: 2, x: 2},
+        %{bonus: nil, letter: "O", value: 1, y: 2, x: 3},
+      ],
+    ]
+  end
+  test "touching_words should return all col/row for letters provided (highsx,so) [span gap]" do
     tiles_in_play = [
       %{letter: "S", value: 1, y: 4, x: 1},
       %{letter: "O", value: 1, y: 4, x: 2},
     ]
-    board = board_high_wide() |> Wordza.GameBoard.add_letters(tiles_in_play)
+    board = board_high_wide()
+            |> Wordza.GameBoard.add_letters(tiles_in_play)
+            |> Wordza.GameBoard.add_letters([
+              %{y: 5, x: 0, letter: "X", value: 1},
+              %{y: 5, x: 1, letter: "X", value: 1},
+            ])
     assert Wordza.GameBoardGet.touching_words(board, tiles_in_play) == [
       [
         %{bonus: nil, letter: "H", value: 1, y: 0, x: 1},
@@ -67,14 +94,98 @@ defmodule GameBoardGetTest do
         %{bonus: nil, letter: "G", value: 1, y: 2, x: 1},
         %{bonus: nil, letter: "H", value: 1, y: 3, x: 1},
         %{bonus: nil, letter: "S", value: 1, y: 4, x: 1},
+        %{bonus: nil, letter: "X", value: 1, y: 5, x: 1},
       ],
       [
         %{bonus: nil, letter: "S", value: 1, y: 4, x: 1},
         %{bonus: nil, letter: "O", value: 1, y: 4, x: 2},
-      ]
+      ],
+    ]
+  end
+  test "touching_words should return all col/row for letters provided (highsx,ox,so) [span gap, make grid]" do
+    tiles_in_play = [
+      %{letter: "S", value: 1, y: 4, x: 1},
+      %{letter: "O", value: 1, y: 4, x: 2},
+    ]
+    board = board_high_wide()
+            |> Wordza.GameBoard.add_letters(tiles_in_play)
+            |> Wordza.GameBoard.add_letters([
+              %{y: 5, x: 1, letter: "X", value: 1},
+              %{y: 5, x: 2, letter: "X", value: 1},
+            ])
+    assert Wordza.GameBoardGet.touching_words(board, tiles_in_play) == [
+      [
+        %{bonus: nil, letter: "H", value: 1, y: 0, x: 1},
+        %{bonus: nil, letter: "I", value: 1, y: 1, x: 1},
+        %{bonus: nil, letter: "G", value: 1, y: 2, x: 1},
+        %{bonus: nil, letter: "H", value: 1, y: 3, x: 1},
+        %{bonus: nil, letter: "S", value: 1, y: 4, x: 1},
+        %{bonus: nil, letter: "X", value: 1, y: 5, x: 1},
+      ],
+      [
+        %{bonus: nil, letter: "O", value: 1, y: 4, x: 2},
+        %{bonus: nil, letter: "X", value: 1, y: 5, x: 2},
+      ],
+      [
+        %{bonus: nil, letter: "S", value: 1, y: 4, x: 1},
+        %{bonus: nil, letter: "O", value: 1, y: 4, x: 2},
+      ],
+    ]
+  end
+  test "touching_words should return all col/row for letters provided (highsx,ox,soy) [span gap*2, make grid]" do
+    tiles_in_play = [
+      %{letter: "S", value: 1, y: 4, x: 1},
+      %{letter: "O", value: 1, y: 4, x: 2},
+    ]
+    board = board_high_wide()
+            |> Wordza.GameBoard.add_letters(tiles_in_play)
+            |> Wordza.GameBoard.add_letters([
+              %{y: 5, x: 1, letter: "X", value: 1},
+              %{y: 5, x: 2, letter: "X", value: 1},
+              %{y: 4, x: 3, letter: "Y", value: 1},
+              %{y: 5, x: 3, letter: "Y", value: 1},
+            ])
+    assert Wordza.GameBoardGet.touching_words(board, tiles_in_play) == [
+      [
+        %{bonus: nil, letter: "H", value: 1, y: 0, x: 1},
+        %{bonus: nil, letter: "I", value: 1, y: 1, x: 1},
+        %{bonus: nil, letter: "G", value: 1, y: 2, x: 1},
+        %{bonus: nil, letter: "H", value: 1, y: 3, x: 1},
+        %{bonus: nil, letter: "S", value: 1, y: 4, x: 1},
+        %{bonus: nil, letter: "X", value: 1, y: 5, x: 1},
+      ],
+      [
+        %{bonus: nil, letter: "O", value: 1, y: 4, x: 2},
+        %{bonus: nil, letter: "X", value: 1, y: 5, x: 2},
+      ],
+      [
+        %{bonus: nil, letter: "S", value: 1, y: 4, x: 1},
+        %{bonus: nil, letter: "O", value: 1, y: 4, x: 2},
+        %{bonus: nil, letter: "Y", value: 1, y: 4, x: 3},
+      ],
     ]
   end
   test "touching_words should return all col/row for letters provided (wide,so)" do
+    tiles_in_play = [
+      %{letter: "S", value: 1, y: 1, x: 4},
+      %{letter: "O", value: 1, y: 2, x: 4},
+    ]
+    board = board_high_wide() |> Wordza.GameBoard.add_letters(tiles_in_play)
+    assert Wordza.GameBoardGet.touching_words(board, tiles_in_play) == [
+      [
+        %{bonus: nil, letter: "S", value: 1, y: 1, x: 4},
+        %{bonus: nil, letter: "O", value: 1, y: 2, x: 4},
+      ],
+      [
+        %{bonus: nil, letter: "W", value: 1, y: 1, x: 0},
+        %{bonus: nil, letter: "I", value: 1, y: 1, x: 1},
+        %{bonus: nil, letter: "D", value: 1, y: 1, x: 2},
+        %{bonus: nil, letter: "E", value: 1, y: 1, x: 3},
+        %{bonus: nil, letter: "S", value: 1, y: 1, x: 4},
+      ],
+    ]
+  end
+  test "touching_words should return all col/row for letters provided (high,wide,so)" do
     tiles_in_play = [
       %{letter: "S", value: 1, y: 1, x: 4},
       %{letter: "O", value: 1, y: 2, x: 4},
