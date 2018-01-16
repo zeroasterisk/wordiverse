@@ -266,6 +266,56 @@ defmodule GameBoardGetTest do
       %{bonus: nil, letter: "E", value: 1, y: 1, x: 3},
     ]
   end
+  test "word_for_x goes until the end of board" do
+    tiles_in_play = [
+      %{letter: "A", value: 1, y: 0, x: 0},
+      %{letter: "B", value: 1, y: 0, x: 1},
+      %{letter: "C", value: 1, y: 0, x: 2},
+      %{letter: "D", value: 1, y: 0, x: 3},
+      %{letter: "E", value: 1, y: 0, x: 4},
+      %{letter: "F", value: 1, y: 0, x: 5},
+      %{letter: "G", value: 1, y: 0, x: 6},
+    ]
+    board = board_high_wide() |> Wordza.GameBoard.add_letters(tiles_in_play)
+    assert Wordza.GameBoardGet.word_for_x(board, 0, 0) == [
+      %{letter: "A", value: 1, y: 0, x: 0, bonus: nil},
+      %{letter: "B", value: 1, y: 0, x: 1, bonus: nil},
+      %{letter: "C", value: 1, y: 0, x: 2, bonus: nil},
+      %{letter: "D", value: 1, y: 0, x: 3, bonus: nil},
+      %{letter: "E", value: 1, y: 0, x: 4, bonus: nil},
+      %{letter: "F", value: 1, y: 0, x: 5, bonus: nil},
+      %{letter: "G", value: 1, y: 0, x: 6, bonus: nil},
+    ]
+    # same regardless of starting position
+    assert Wordza.GameBoardGet.word_for_x(board, 0, 2) == Wordza.GameBoardGet.word_for_x(board, 0, 0)
+    assert Wordza.GameBoardGet.word_for_x(board, 0, 4) == Wordza.GameBoardGet.word_for_x(board, 0, 0)
+    assert Wordza.GameBoardGet.word_for_x(board, 0, 6) == Wordza.GameBoardGet.word_for_x(board, 0, 0)
+  end
+  test "word_for_y goes until the end of board" do
+    tiles_in_play = [
+      %{letter: "A", value: 1, x: 0, y: 0},
+      %{letter: "B", value: 1, x: 0, y: 1},
+      %{letter: "C", value: 1, x: 0, y: 2},
+      %{letter: "D", value: 1, x: 0, y: 3},
+      %{letter: "E", value: 1, x: 0, y: 4},
+      %{letter: "F", value: 1, x: 0, y: 5},
+      %{letter: "G", value: 1, x: 0, y: 6},
+    ]
+    board = board_high_wide() |> Wordza.GameBoard.add_letters(tiles_in_play)
+    assert Wordza.GameBoardGet.word_for_y(board, 0, 0) == [
+      %{letter: "A", value: 1, x: 0, y: 0, bonus: nil},
+      %{letter: "B", value: 1, x: 0, y: 1, bonus: nil},
+      %{letter: "C", value: 1, x: 0, y: 2, bonus: nil},
+      %{letter: "D", value: 1, x: 0, y: 3, bonus: nil},
+      %{letter: "E", value: 1, x: 0, y: 4, bonus: nil},
+      %{letter: "F", value: 1, x: 0, y: 5, bonus: nil},
+      %{letter: "G", value: 1, x: 0, y: 6, bonus: nil},
+    ]
+    # same regardless of starting position
+    assert Wordza.GameBoardGet.word_for_y(board, 2, 0) == Wordza.GameBoardGet.word_for_y(board, 0, 0)
+    assert Wordza.GameBoardGet.word_for_y(board, 4, 0) == Wordza.GameBoardGet.word_for_y(board, 0, 0)
+    assert Wordza.GameBoardGet.word_for_y(board, 6, 0) == Wordza.GameBoardGet.word_for_y(board, 0, 0)
+  end
 
   # sometimes it's usefule to fill a board with letters
   defp fill_abcs(board) do

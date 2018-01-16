@@ -100,7 +100,7 @@ defmodule Wordza.GameBoardGet do
   end
   defp word_for_y_down(word_part, board, y, x) do
     count_y = board |> Map.keys() |> Enum.count()
-    case y > (count_y - 2) do
+    case y > (count_y - 1) do
       true -> word_part
       false ->
         square = at(board, y, x)
@@ -137,15 +137,13 @@ defmodule Wordza.GameBoardGet do
   end
   defp word_for_x_right(word_part, board, y, x) do
     count_x = board[0] |> Map.keys() |> Enum.count()
-    case x > (count_x - 2) do
+    case x > (count_x - 1) do
       true -> word_part
       false ->
         square = at(board, y, x)
         case Map.get(square, :letter) do
           nil -> word_part
-          _ ->
-            [square | word_part]
-            |> word_for_x_right(board, y, (x + 1))
+          _ -> [square | word_part] |> word_for_x_right(board, y, (x + 1))
         end
     end
   end
