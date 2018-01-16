@@ -86,13 +86,13 @@ defmodule Wordza.BotBits do
       []
 
       iex> letters_yx = [["A", 2, 2]]
-      iex> board = Wordza.GameBoard.create(:mock) |> Wordza.GameBoard.add_letters_xy(letters_yx)
+      iex> board = Wordza.GameBoard.create(:mock) |> Wordza.GameBoard.add_letters(letters_yx)
       iex> tiles = Wordza.GameTiles.add([], "a", 1, 7)
       iex> Wordza.BotBits.get_all_start_yx(board, tiles)
       [[0, 2], [1, 2], [2, 0], [2, 1]]
 
       iex> letters_yx = [["A", 2, 2], ["A", 2, 3], ["A", 2, 4]]
-      iex> board = Wordza.GameBoard.create(:mock) |> Wordza.GameBoard.add_letters_xy(letters_yx)
+      iex> board = Wordza.GameBoard.create(:mock) |> Wordza.GameBoard.add_letters(letters_yx)
       iex> tiles = Wordza.GameTiles.add([], "a", 1, 7)
       iex> Wordza.BotBits.get_all_start_yx(board, tiles)
       [[0, 2], [0, 3], [0, 4], [1, 2], [1, 3], [1, 4], [2, 0], [2, 1]]

@@ -18,24 +18,6 @@ defmodule Wordza.PlayAssembler do
   ) do
     letters_yx = play_word_start_y([], start_yx, word_start)
     player_key |> GamePlay.create(letters_yx) |> GamePlay.verify_start(game)
-
-    # {tiles_to_play, tiles_left} = GameTiles.take_from_tray(tiles_in_tray, word_start)
-    # plus_y = BotBits.start_yx_count_y_until_played(board, y, x)
-    # count_word_start = Enum.count(word_start)
-    # case plus_y == count_word_start and Enum.count(tiles_to_play) == count_word_start do
-    #   false -> nil
-    #   true ->
-    #     played_letter = board |> get_in([y + plus_y, x, :letter])
-    #     %GamePlay{
-    #       board: board,
-    #       player_key: player_key,
-    #       start_yx: start_yx,
-    #       dir: :y,
-    #       word_start: word_start,
-    #       word: word_start ++ [played_letter],
-    #       letters_left: tiles_left,
-    #     }
-    # end
   end
 
   @doc """
