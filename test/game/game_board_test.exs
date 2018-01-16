@@ -1,6 +1,7 @@
 defmodule GameBoardTest do
   use ExUnit.Case
   doctest Wordza.GameBoard
+  alias Wordza.GameTile
 
   test "create board for scrabble" do
     board = Wordza.GameBoard.create(:scrabble)
@@ -110,6 +111,23 @@ defmodule GameBoardTest do
     assert Wordza.GameBoard.empty?(board) == true
     board = put_in(board, [12, 12, :letter], "a")
     assert Wordza.GameBoard.empty?(board) == false
+  end
+  test "add_letters should put a list of letters_yx onto the board (deprecate)" do
+    letters_yx = [["A", 0, 0], ["B", 0, 1]]
+    board = Wordza.GameBoard.create(:mock)
+            |> Wordza.GameBoard.add_letters(letters_yx)
+    assert board[0][0] == %{letter: "A", bonus: :tw}
+    assert board[0][1] == %{letter: "B", bonus: nil}
+  end
+  test "add_letters should put a list of tiles_in_play onto the board" do
+    letters_yx = [
+      %GameTile{letter: "A", value: 1, y: 0, x: 0},
+      %GameTile{letter: "B", value: 2, y: 0, x: 1},
+    ]
+    board = Wordza.GameBoard.create(:mock)
+            |> Wordza.GameBoard.add_letters(letters_yx)
+    assert board[0][0] == %{letter: "A", bonus: :tw, value: 1}
+    assert board[0][1] == %{letter: "B", bonus: nil, value: 2}
   end
 
 end

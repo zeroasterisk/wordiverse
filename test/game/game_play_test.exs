@@ -100,8 +100,15 @@ defmodule GamePlayTest do
     ### these need the game, more complex, need board or player
 
     test "verify_letters_in_tray (good)", state do
-      play = GamePlay.verify_letters_in_tray(state[:play], state[:game])
+      play = state[:play]
+             |> GamePlay.assign_letters(state[:game])
+             |> GamePlay.verify_letters_in_tray(state[:game])
       assert get_errors(play) == []
+      assert play.tiles_in_play == [
+        %Wordza.GameTile{value: 1, letter: "A", x: 2, y: 0},
+        %Wordza.GameTile{value: 1, letter: "L", x: 2, y: 1},
+        %Wordza.GameTile{value: 1, letter: "L", x: 2, y: 2},
+      ]
       assert play.tiles_in_tray == [
         %Wordza.GameTile{letter: "D", value: 1},
         %Wordza.GameTile{letter: "N", value: 1},
@@ -110,11 +117,15 @@ defmodule GamePlayTest do
       ]
     end
     test "verify_letters_in_tray (bad)", state do
-      play = Map.merge(state[:play], %{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
+      play = state[:play]
+             |> Map.merge(%{letters_yx: [["N", 0, 0], ["O", 0, 1]]})
+             |> GamePlay.assign_letters(state[:game])
+             |> GamePlay.verify_letters_in_tray(state[:game])
       assert get_errors(
         GamePlay.verify_letters_in_tray(play, state[:game])
       ) == ["Tiles not in your tray"]
       # ensure it does not change the tiles_in_tray (since it did not pass)
+      assert play.tiles_in_play == []
       assert Map.get(
         GamePlay.verify_letters_in_tray(play, state[:game]),
         :tiles_in_tray

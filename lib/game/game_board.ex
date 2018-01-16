@@ -9,6 +9,7 @@ defmodule Wordza.GameBoard do
   http://blog.danielberkompas.com/2016/04/23/multidimensional-arrays-in-elixir.html
   """
   require Logger
+  alias Wordza.GameTile
 
   @doc """
   Build a new board for a type of game.
@@ -332,13 +333,25 @@ defmodule Wordza.GameBoard do
 
       iex> board = %{0 => %{0 => %{letter: nil}, 1 => %{letter: nil}}}
       iex> letters_yx = [["A", 0, 0], ["B", 0, 1]]
-      iex> Wordza.GameBoard.add_letters_xy(board, letters_yx)
+      iex> Wordza.GameBoard.add_letters(board, letters_yx)
       %{0 => %{0 => %{letter: "A"}, 1 => %{letter: "B"}}}
 
   """
-  def add_letters_xy(board, []), do: board
-  def add_letters_xy(board, [[letter, y, x] | letters_yx]) do
-    board |> put_in([y, x, :letter], letter) |> add_letters_xy(letters_yx)
+  def add_letters(board, []), do: board
+  def add_letters(board, [[letter, y, x] | letters_yx]) do
+    board |> put_in([y, x, :letter], letter) |> add_letters(letters_yx)
+  end
+  def add_letters(board, [%{x: x, y: y, letter: _l} = tile | letters_yx]) do
+    square = board |> get_in([y, x]) |> Map.merge(simplify_letter(tile))
+    board
+    |> put_in([y, x], square)
+    |> add_letters(letters_yx)
+  end
+  def simplify_letter(%GameTile{x: x, y: y, letter: _l} = tile) do
+    tile |> Map.from_struct() |> Map.delete(:y) |> Map.delete(:x)
+  end
+  def simplify_letter(%{x: x, y: y, letter: _l} = tile) do
+    tile |> Map.delete(:y) |> Map.delete(:x)
   end
 
 end

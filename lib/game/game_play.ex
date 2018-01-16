@@ -14,7 +14,6 @@ defmodule Wordza.GamePlay do
   alias Wordza.GameBoardGet
   alias Wordza.GameInstance
   alias Wordza.GameTiles
-  alias Wordza.GameTile
   alias Wordza.Dictionary
 
   defstruct [
@@ -90,7 +89,7 @@ defmodule Wordza.GamePlay do
   """
   def assign(
     %GamePlay{errors: []} = play,
-    %GameInstance{board: board} = game
+    %GameInstance{} = game
   ) do
     play
     |> assign_letters(game)
@@ -127,8 +126,7 @@ defmodule Wordza.GamePlay do
     %GamePlay{tiles_in_play: tiles_in_play, board_next: board_next, errors: []} = play,
     %GameInstance{} = _game
   ) do
-    words = GameBoardGet.touching_words(board_next, tiles_in_play)
-    play |> Map.merge(%{words: words})
+    play |> Map.merge(%{words: GameBoardGet.touching_words(board_next, tiles_in_play)})
   end
   def assign_words(%GamePlay{} = play, %GameInstance{} = _game), do: play
 
@@ -165,7 +163,7 @@ defmodule Wordza.GamePlay do
     |> Enum.sum()
     |> apply_bonus_word(word)
   end
-  defp ensure_value(%{value: value} = l), do: l
+  defp ensure_value(%{value: _v} = l), do: l
   defp ensure_value(%{} = l) do
     raise "ensure_value no value"
     Logger.error fn() -> "GamePlay.ensure_value missing value #{inspect(l)}" end
@@ -175,10 +173,10 @@ defmodule Wordza.GamePlay do
   defp apply_bonus_letter(%{bonus: :dl, value: value} = l), do: l |> Map.merge(%{bonus: nil, value: value * 2})
   defp apply_bonus_letter(%{} = l), do: l
   defp apply_bonus_word(score, []), do: score
-  defp apply_bonus_word(score, [%{bonus: :tw} = played | word]), do: (score * 3) |> apply_bonus_word(word)
-  defp apply_bonus_word(score, [%{bonus: :dw} = played | word]), do: (score * 2) |> apply_bonus_word(word)
-  defp apply_bonus_word(score, [%{bonus: :st} = played | word]), do: (score * 2) |> apply_bonus_word(word)
-  defp apply_bonus_word(score, [%{} = played | word]), do: score |> apply_bonus_word(word)
+  defp apply_bonus_word(score, [%{bonus: :tw} = _played | word]), do: (score * 3) |> apply_bonus_word(word)
+  defp apply_bonus_word(score, [%{bonus: :dw} = _played | word]), do: (score * 2) |> apply_bonus_word(word)
+  defp apply_bonus_word(score, [%{bonus: :st} = _played | word]), do: (score * 2) |> apply_bonus_word(word)
+  defp apply_bonus_word(score, [%{} = _played | word]), do: score |> apply_bonus_word(word)
 
   @doc """
   We only allow bonuses on letters/squares which were just played
@@ -237,11 +235,22 @@ defmodule Wordza.GamePlay do
       false -> Map.merge(played, %{bonus: nil})
     end
   end
-  defp tiles_to_letters_yx(acc, [%{letter: letter, y: y, x: x} | tiles_in_play]) do
-    [[letter, y, x] | acc]
+
+  @doc """
+  Transform a list of tiles, played... into a list of letters_yx
+
+  ## Examples
+
+      iex> tiles_in_play = [%{letter: "A", value: 1, y: 0, x: 3}, %{letter: "A", value: 1, y: 0, x: 4}]
+      iex> Wordza.GamePlay.tiles_to_letters_yx([], tiles_in_play)
+      [["A", 0, 3], ["A", 0, 4]]
+  """
+  def tiles_to_letters_yx(acc, []), do: acc |> Enum.reverse()
+  def tiles_to_letters_yx(acc, [%{letter: letter, y: y, x: x} | tiles_in_play]) do
+    [[letter, y, x] | acc] |> tiles_to_letters_yx(tiles_in_play)
   end
-  defp tiles_to_letters_yx(acc, [[letter, y, x] | tiles_in_play]) do
-    [[letter, y, x] | acc]
+  def tiles_to_letters_yx(acc, [[letter, y, x] | tiles_in_play]) do
+    [[letter, y, x] | acc] |> tiles_to_letters_yx(tiles_in_play)
   end
 
   @doc """
@@ -386,23 +395,18 @@ defmodule Wordza.GamePlay do
   @doc """
   Verify a play only contains letter which are in a player's tray right now
 
-  NOTE this will modify tiles_in_tray on successful run (could move to different function)
+  NOTE this is actually done in assign_letters, but we can check for them here
   """
   def verify_letters_in_tray(
-    %GamePlay{player_key: player_key, letters_yx: letters_yx, errors: []} = play,
+    %GamePlay{player_key: player_key, letters_yx: letters_yx, tiles_in_play: tiles_in_play, errors: []} = play,
     %GameInstance{} = game
   ) do
-    # TODO vv replace this with an assign_letters <--
-    player = Map.get(game, player_key)
-    letters_in_tray = player |> Map.get(:tiles_in_tray)
     letters_in_play = letters_yx |> Enum.map(fn([letter, _, _]) -> letter end)
-    {tiles_in_play, tray} = GameTiles.take_from_tray(letters_in_tray, letters_in_play)
-    # TODO ^^ replace with assign_letters <--
-    case Enum.count(tiles_in_play) == Enum.count(letters_in_play) do
-      true ->
-        Map.merge(play, %{tiles_in_tray: tray})
-      false ->
-        Map.merge(play, %{errors: ["Tiles not in your tray"]})
+    count_tiles_in_play = Enum.count(tiles_in_play)
+    count_letters_in_play = Enum.count(letters_in_play)
+    case count_tiles_in_play > 0 and count_tiles_in_play == count_letters_in_play do
+      true -> play
+      false -> Map.merge(play, %{errors: ["Tiles not in your tray"]})
     end
   end
   def verify_letters_in_tray(%GamePlay{} = play, %GameInstance{}), do: play
@@ -490,7 +494,7 @@ defmodule Wordza.GamePlay do
   """
   def verify_words_exist(
     %GamePlay{words: words, errors: []} = play,
-    %GameInstance{} = game
+    %GameInstance{} = _game
   ) do
     case Enum.count(words) do
       0 ->
@@ -526,8 +530,8 @@ defmodule Wordza.GamePlay do
   NOTE this is used by bots for assembling plays
   """
   def verify_letters_form_partial_words(
-    %GamePlay{words: words, board_next: board_next, errors: []} = play,
-    %GameInstance{board: board} = game
+    %GamePlay{words: words, errors: []} = play,
+    %GameInstance{} = game
   ) do
     words_invalid = Enum.filter(words, fn(word) -> !verify_word_start(game, word) end)
     case Enum.count(words_invalid) do
