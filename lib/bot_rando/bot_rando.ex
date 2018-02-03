@@ -17,14 +17,17 @@ defmodule Wordza.BotRando do
   alias Wordza.BotBits
   alias Wordza.GameInstance
   alias Wordza.GamePlayer
-  alias Wordza.GamePlay
+  # alias Wordza.GamePlay
   alias Wordza.GameBoard
+  alias Wordza.PlayAssembler
 
   defstruct [
     player_key: :player_1, # TODO <-- get from GameInstance
     type: nil,
     tiles_in_tray: nil,
     word_starts: [],
+    start_yxs: [],
+    plays: [],
     board: nil,
     total_y: nil,
     total_x: nil,
@@ -48,13 +51,12 @@ defmodule Wordza.BotRando do
     } = _player,
     %GameInstance{
       board: board,
-      type: type,
-    } = _game
+    } = game
   ) do
     {total_y, total_x, center_y, center_x} = board |> GameBoard.measure
-    bot = %BotRando{
+
+    %BotRando{
       tiles_in_tray: tiles_in_tray,
-      word_starts: BotBits.get_all_word_starts(tiles_in_tray, type),
       board: board,
       total_y: total_y,
       total_x: total_x,
@@ -62,11 +64,37 @@ defmodule Wordza.BotRando do
       center_x: center_x,
       first_play?: GameBoard.empty?(board),
     }
+    |> assign_start_yxs()
+    |> assign_word_starts()
+    |> assign_all_plays(game)
+    |> choose_play()
     # TODO build out an Task.await or genserver
     # to attmpt multiple variations and maintain state across them
-    pick_start_yx(bot)
+    # pick_start_yx(bot)
 
   end
+
+  defp assign_start_yxs(%BotRando{first_play?: true, center_y: center_y, center_x: center_x} = bot) do
+    bot |> Map.merge(%{start_yxs: [center_y, center_x]})
+  end
+  defp assign_start_yxs(%BotRando{board: board, tiles_in_tray: tiles_in_tray} = bot) do
+    bot |> Map.merge(%{start_yxs: BotBits.get_all_start_yx(board, tiles_in_tray)})
+  end
+  defp assign_word_starts(%BotRando{type: type, tiles_in_tray: tiles_in_tray} = bot) do
+    bot |> Map.merge(%{word_starts: BotBits.get_all_word_starts(tiles_in_tray, type)})
+  end
+  defp assign_all_plays(%BotRando{} = bot, %GameInstance{} = game) do
+    bot |> Map.merge(%{plays: PlayAssembler.create_all_plays(game, bot)})
+  end
+  defp choose_play(%BotRando{plays: plays} = _bot) do
+    plays
+    |> Enum.filter(fn(%{valid: v}) -> v == true end)
+    |> Enum.sort(fn(%{score: y1}, %{score: y2}) -> y1 < y2 end)
+    |> List.first()
+  end
+
+
+
 
   @doc """
   Pick an X & Y to start the play
@@ -115,10 +143,10 @@ defmodule Wordza.BotRando do
     ]
   end
 
-  @doc """
-  Given a board, set of tile, and a single start_yx
-  Then return a list of all possible plays
-  """
+  # @doc """
+  # Given a board, set of tile, and a single start_yx
+  # Then return a list of all possible plays
+  # """
   # def get_all_plays_for_start_yx(
   #   %BotRando{board: board, tiles_in_tray: tiles, valid_plays: valid_plays},
   #   start_yx

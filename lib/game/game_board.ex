@@ -354,4 +354,24 @@ defmodule Wordza.GameBoard do
     tile |> Map.delete(:y) |> Map.delete(:x)
   end
 
+  @doc """
+  Given a board and a y + x, is there a letter played there?
+
+  ## Examples
+
+      iex> board = %{0 => %{0 => %{letter: "A"}, 1 => %{letter: nil}}}
+      iex> Wordza.GameBoard.played?(board, 0, 0)
+      true
+
+      iex> board = %{0 => %{0 => %{letter: "A"}, 1 => %{letter: nil}}}
+      iex> Wordza.GameBoard.played?(board, 0, 1)
+      false
+  """
+  def played?(board, y, x) do
+    case board |> get_in([y, x, :letter]) do
+      nil -> false
+      _ -> true
+    end
+  end
+
 end

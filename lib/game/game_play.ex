@@ -298,7 +298,8 @@ defmodule Wordza.GamePlay do
     |> verify_letters_do_not_overlap(game)
     |> verify_letters_touch(game)
     |> verify_letters_cover_start(game)
-    |> verify_letters_form_partial_words(game)
+    |> verify_words_exist(game)
+    |> verify_words_are_at_least_partial(game)
     # final verification
     |> verify_no_errors()
     |> assign_score(game)
@@ -529,7 +530,7 @@ defmodule Wordza.GamePlay do
   are at least partial words (uses the Dictionary for the type of game = GenServer)
   NOTE this is used by bots for assembling plays
   """
-  def verify_letters_form_partial_words(
+  def verify_words_are_at_least_partial(
     %GamePlay{words: words, errors: []} = play,
     %GameInstance{} = game
   ) do
@@ -542,7 +543,7 @@ defmodule Wordza.GamePlay do
         Map.merge(play, %{errors: ["Not In Dictionary, unknown words: #{simplify_words(words_invalid)}"]})
     end
   end
-  def verify_letters_form_partial_words(%GamePlay{} = play, %GameInstance{}), do: play
+  def verify_words_are_at_least_partial(%GamePlay{} = play, %GameInstance{}), do: play
 
   @doc """
   Sometimes we want simple lists of actual words, not squares/plays
