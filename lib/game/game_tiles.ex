@@ -136,15 +136,53 @@ defmodule Wordza.GameTiles do
   def add(tiles, letter, value, count) do
     [%Wordza.GameTile{letter: clean_letter(letter), value: value} | add(tiles, letter, value, (count - 1))]
   end
-  # clean a letter or a Tile, get an upper case single letter out
-  defp clean_letter(%Wordza.GameTile{letter: letter}), do: clean_letter(letter)
-  defp clean_letter([letter, y, x]) when is_bitstring(letter) and is_integer(y) and is_integer(x), do: clean_letter(letter)
-  defp clean_letter(letter) when is_bitstring(letter) do
+
+  @doc """
+  Clean a letter or a Tile to a simple letter
+
+  Given a letter or tile
+  Then return an upper case letter
+
+  ## Examples
+
+      iex> Wordza.GameTiles.clean_letter("a")
+      "A"
+
+      iex> Wordza.GameTiles.clean_letter(%Wordza.GameTile{letter: "a"})
+      "A"
+
+      iex> Wordza.GameTiles.clean_letter(["a", 0, 0])
+      "A"
+  """
+  def clean_letter(%Wordza.GameTile{letter: letter}), do: clean_letter(letter)
+  def clean_letter([letter, y, x]) when is_bitstring(letter) and is_integer(y) and is_integer(x), do: clean_letter(letter)
+  def clean_letter(letter) when is_bitstring(letter) do
     letter |> String.upcase()
   end
-  defp clean_letter(letter) do
+  def clean_letter(letter) do
     Logger.error fn() -> "GameTiles.clean_letter invalid input #{inspect(letter)}" end
     ""
+  end
+
+  @doc """
+  Clean a list of letters down to simple letters
+
+  Given a list of letters or tiles
+  Then return a list of upper case letters
+
+  ## Examples
+
+      iex> Wordza.GameTiles.clean_letters(["a"])
+      ["A"]
+
+      iex> Wordza.GameTiles.clean_letters([%Wordza.GameTile{letter: "a"}])
+      ["A"]
+
+      iex> Wordza.GameTiles.clean_letters([["a", 0, 0]])
+      ["A"]
+  """
+  def clean_letters(letters) do
+    letters |> Enum.map(&clean_letter/1)
   end
 
   @doc """
