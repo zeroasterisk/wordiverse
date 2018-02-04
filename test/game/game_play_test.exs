@@ -99,6 +99,36 @@ defmodule GamePlayTest do
 
     ### these need the game, more complex, need board or player
 
+    test "verify_letters_are_on_board (good)", state do
+      assert get_errors(
+        GamePlay.verify_letters_are_on_board(state[:play], state[:game])
+      ) == []
+    end
+    test "verify_letters_are_on_board (bad, -1 y)", state do
+      play = state[:play] |> Map.merge(%{letters_yx: [["N", -1, 0]]})
+      assert get_errors(
+        GamePlay.verify_letters_are_on_board(play, state[:game])
+      ) == ["Tiles must be played on the board"]
+    end
+    test "verify_letters_are_on_board (bad, -1 x)", state do
+      play = state[:play] |> Map.merge(%{letters_yx: [["N", 0, -1]]})
+      assert get_errors(
+        GamePlay.verify_letters_are_on_board(play, state[:game])
+      ) == ["Tiles must be played on the board"]
+    end
+    test "verify_letters_are_on_board (bad, 5 y)", state do
+      play = state[:play] |> Map.merge(%{letters_yx: [["N", 5, 0]]})
+      assert get_errors(
+        GamePlay.verify_letters_are_on_board(play, state[:game])
+      ) == ["Tiles must be played on the board"]
+    end
+    test "verify_letters_are_on_board (bad, 5 x)", state do
+      play = state[:play] |> Map.merge(%{letters_yx: [["N", 0, 5]]})
+      assert get_errors(
+        GamePlay.verify_letters_are_on_board(play, state[:game])
+      ) == ["Tiles must be played on the board"]
+    end
+
     test "verify_letters_in_tray (good)", state do
       play = state[:play]
              |> GamePlay.assign_letters(state[:game])

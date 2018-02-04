@@ -264,6 +264,8 @@ defmodule Wordza.GamePlay do
     # verifications which only consider the play itself
     |> verify_letters_are_valid()
     |> verify_letters_are_single_direction()
+    # pre-assign verify
+    |> verify_letters_are_on_board(game)
     # assign stuff
     |> assign_letters(game)
     |> assign_words(game)
@@ -290,6 +292,8 @@ defmodule Wordza.GamePlay do
     # verifications which only consider the play itself
     |> verify_letters_are_valid()
     |> verify_letters_are_single_direction()
+    # pre-assign verify
+    |> verify_letters_are_on_board(game)
     # assign stuff
     |> assign_letters(game)
     |> assign_words(game)
@@ -392,6 +396,26 @@ defmodule Wordza.GamePlay do
   end
   def verify_letters_are_single_direction(%GamePlay{} = play), do: play
 
+  @doc """
+  Verify a play only contains y+x positions which fit on the board
+
+  NOTE this is done before assign_letters
+  """
+  def verify_letters_are_on_board(
+    %GamePlay{letters_yx: letters_yx, errors: []} = play,
+    %GameInstance{board: board} = game
+  ) do
+    {total_y, total_x, _center_y, _center_x} = GameBoard.measure(board)
+    all_good = letters_yx |> Enum.all?(fn([_letter, y, x]) ->
+      y >= 0 && y < total_y &&
+      x >= 0 && x < total_x
+    end)
+    case all_good do
+      true -> play
+      false -> Map.merge(play, %{errors: ["Tiles must be played on the board"]})
+    end
+  end
+  def verify_letters_are_on_board(%GamePlay{} = play, %GameInstance{}), do: play
 
   @doc """
   Verify a play only contains letter which are in a player's tray right now
