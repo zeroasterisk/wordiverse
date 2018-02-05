@@ -82,7 +82,6 @@ defmodule PlayAssemblerTest do
         start_yx: start_yx,
         word_start: word_start,
       })
-      # IO.inspect play
       assert play.direction == :y
       assert play.valid == true
       assert play.errors == []
@@ -114,7 +113,6 @@ defmodule PlayAssemblerTest do
         start_yx: start_yx,
         word_start: word_start,
       })
-      # IO.inspect play
       assert play.direction == :y
       assert play.valid == true
       assert play.errors == []
@@ -147,7 +145,43 @@ defmodule PlayAssemblerTest do
         start_yxs: start_yxs,
         word_starts: word_starts,
       })
-      IO.inspect plays
+      assert Enum.count(plays) == 15
+      first = Enum.at(plays, 0)
+      assert first.score == 16
+      assert first.board_next |> GameBoard.to_list == [
+        [nil, nil, nil, nil, nil],
+        [nil, "A", nil, nil, nil],
+        ["A", "L", "L", nil, nil],
+        [nil, "A", nil, nil, nil],
+        [nil, "N", nil, nil, nil]
+      ]
+      assert first.tiles_in_play == [
+        %Wordza.GameTile{letter: "A", value: 1, x: 1, y: 1},
+        %Wordza.GameTile{letter: "A", value: 1, x: 1, y: 3},
+        %Wordza.GameTile{letter: "N", value: 1, x: 1, y: 4}
+      ]
+      assert first.tiles_in_tray == [
+        %Wordza.GameTile{letter: "L", value: 1, x: nil, y: nil},
+        %Wordza.GameTile{letter: "L", value: 1, x: nil, y: nil},
+      ]
+      alt_play = Enum.at(plays, 10)
+      assert alt_play.score == 5
+      assert alt_play.board_next |> GameBoard.to_list == [
+        [nil, nil, "A", nil, nil],
+        [nil, nil, "L", nil, nil],
+        ["A", "L", "L", nil, nil],
+        [nil, nil, nil, nil, nil],
+        [nil, nil, nil, nil, nil]
+      ]
+      assert alt_play.tiles_in_play == [
+        %Wordza.GameTile{letter: "A", value: 1, x: 2, y: 0},
+        %Wordza.GameTile{letter: "L", value: 1, x: 2, y: 1}
+      ]
+      assert alt_play.tiles_in_tray == [
+        %Wordza.GameTile{letter: "A", value: 1, x: nil, y: nil},
+        %Wordza.GameTile{letter: "L", value: 1, x: nil, y: nil},
+        %Wordza.GameTile{letter: "N", value: 1, x: nil, y: nil}
+      ]
     end
     test "append_remaining should not create set invalid plays (not in dictionary)", state do
       player = state[:game] |> Map.get(:player_1)
@@ -188,7 +222,7 @@ defmodule PlayAssemblerTest do
         word_start: word_start,
       })
       plays = PlayAssembler.append_remaining(game, play, [])
-      assert Enum.count(plays) == 1
+      assert Enum.count(plays) == 2
       play = List.first(plays)
       assert play.tiles_in_play == [
         %Wordza.GameTile{letter: "A", value: 1, y: 0, x: 0},
@@ -199,17 +233,30 @@ defmodule PlayAssemblerTest do
       assert play.errors == []
       assert play.valid == true
       assert play.score == 12
+
+      # TODO this is bullshit - it should limit to only 1 copy of any play
+      play = List.last(plays)
+      assert play.tiles_in_play == [
+        %Wordza.GameTile{letter: "A", value: 1, y: 0, x: 0},
+        %Wordza.GameTile{letter: "L", value: 1, y: 1, x: 0},
+        # skipping y=2, already on board
+        %Wordza.GameTile{letter: "N", value: 1, y: 3, x: 0}
+      ]
+      assert play.errors == []
+      assert play.valid == true
+      assert play.score == 12
+
     end
-    test "next_yx should unplayed y=3 (y=2 was played)", state do
+    test "next_unplayed_yx should allow y=3 (y=2 was played)", state do
       play = PlayAssembler.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: [0, 0],
         word_start: ["A", "L"],
       })
-      assert PlayAssembler.next_yx(play) == [3, 0]
+      assert PlayAssembler.next_unplayed_yx(play) == [3, 0]
     end
-    test "next_yx should unplayed y=4 (y=2&3 were played)", state do
+    test "next_unplayed_yx should allow y=4 (y=2&3 were played)", state do
       board = state[:game]
               |> Map.get(:board)
               |> GameBoard.add_letters([%{letter: "L", y: 3, x: 0, value: 1}])
@@ -220,7 +267,7 @@ defmodule PlayAssemblerTest do
         start_yx: [0, 0],
         word_start: ["A", "L"],
       })
-      assert PlayAssembler.next_yx(play) == [4, 0]
+      assert PlayAssembler.next_unplayed_yx(play) == [4, 0]
     end
   end
 end

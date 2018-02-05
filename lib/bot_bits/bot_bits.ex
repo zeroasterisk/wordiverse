@@ -8,6 +8,7 @@ defmodule Wordza.BotBits do
   - build_all_words_for_letters
   """
   alias Wordza.GameBoard
+  alias Wordza.GameTiles
 
   @doc """
   Is the y+x a possible start on the board?
@@ -119,7 +120,8 @@ defmodule Wordza.BotBits do
           ["A", "L", "L"],
       ]
   """
-  def get_all_word_starts(letters, type) do
+  def get_all_word_starts(letters, type) when is_list(letters) and is_atom(type) do
+    letters = GameTiles.clean_letters(letters)
     case Enum.member?(letters, "?") do
       false ->
         type

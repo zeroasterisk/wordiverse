@@ -282,6 +282,26 @@ defmodule Wordza.GamePlay do
   end
 
   @doc """
+  Verify a play is playable on a game (FINAL - ALL FULL WORDS)
+  """
+  def verify_final_play(
+    %GamePlay{} = play,
+    %GameInstance{} = game
+  ) do
+    play
+    # verifications with game
+    |> verify_letters_are_on_board(game)
+    |> verify_letters_do_not_overlap(game)
+    |> verify_letters_touch(game)
+    |> verify_letters_cover_start(game)
+    |> verify_words_exist(game)
+    |> verify_words_are_full_words(game)
+    # final verification
+    |> verify_no_errors()
+    |> assign_score(game)
+  end
+
+  @doc """
   Verify a play is possibly playable on a game (PARTIAL - ALL WORDS AT LEAST START)
   """
   def verify_start(
