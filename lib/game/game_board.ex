@@ -247,6 +247,32 @@ defmodule Wordza.GameBoard do
   end
 
   @doc """
+  Print a board, nicely
+
+  ## Examples
+
+  #iex> board = Wordza.GameBoard.create(:mock) |> Wordza.GameBoard.add_letters([["A", 1, 1], ["B", 3, 3]])
+  #iex> Wordza.GameBoard.to_string(board)
+  #"---------\n| ..... |\n| .A... |\n| ..... |\n| ...B. |\n| ..... |\n---------"
+  """
+  def to_string(board) do
+    b = board |> to_list()
+    |> Enum.map(fn(row) ->
+      row
+      |> Enum.map(&to_string_letter/1)
+      |> Enum.join("")
+    end)
+    |> Enum.map(fn(s) -> "| #{s} |" end)
+
+    total_x = Enum.count(board[0])
+    b = [String.duplicate("-", total_x + 4)] ++ b
+    b = b ++ [String.duplicate("-", total_x + 4)]
+    b |> Enum.join("\n")
+  end
+  defp to_string_letter(nil), do: "."
+  defp to_string_letter(l), do: l
+
+  @doc """
   Convert a board to a 2-dim list matrix of letters
 
   ## Examples
@@ -303,6 +329,26 @@ defmodule Wordza.GameBoard do
       end
     )
     |> Enum.reduce([], fn(l, acc) -> acc ++ l end)
+  end
+
+  @doc """
+  Convert a board to a flat list of letters_yx sets
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock) |> Wordza.GameBoard.add_letters([["A", 1, 1], ["B", 3, 3]])
+      iex> Wordza.GameBoard.to_letter_yx_list(board)
+      [["A", 1, 1], ["B", 3, 3]]
+  """
+  def to_letter_yx_list(board) do
+    board
+    |> Enum.map(
+      fn({y, row}) ->
+        Enum.map(row, fn({x, %{letter: l}}) -> [l, y, x] end)
+      end
+    )
+    |> Enum.reduce([], fn(l, acc) -> acc ++ l end)
+    |> Enum.filter(fn([l, _, _]) -> !is_nil(l) end)
   end
 
   @doc """
@@ -369,6 +415,30 @@ defmodule Wordza.GameBoard do
   """
   def played?(board, y, x) do
     case board |> get_in([y, x, :letter]) do
+      nil -> false
+      _ -> true
+    end
+  end
+
+  @doc """
+  Given a board and a y + x, is the y + x on the board?
+
+  ## Examples
+
+      iex> board = %{0 => %{0 => %{letter: "A"}, 1 => %{letter: nil}}}
+      iex> Wordza.GameBoard.exists?(board, 0, 0)
+      true
+
+      iex> board = %{0 => %{0 => %{letter: "A"}, 1 => %{letter: nil}}}
+      iex> Wordza.GameBoard.exists?(board, 0, 1)
+      true
+
+      iex> board = %{0 => %{0 => %{letter: "A"}, 1 => %{letter: nil}}}
+      iex> Wordza.GameBoard.exists?(board, 0, 2)
+      false
+  """
+  def exists?(board, y, x) do
+    case board |> get_in([y, x]) do
       nil -> false
       _ -> true
     end

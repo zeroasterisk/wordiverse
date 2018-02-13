@@ -2,6 +2,7 @@ defmodule Wordza.PlayAssembler do
   @moduledoc """
   A useful module/struct for assembling possible plays
   """
+  require Logger
   alias Wordza.GamePlay
   alias Wordza.GameInstance
   alias Wordza.GameBoard
@@ -15,35 +16,57 @@ defmodule Wordza.PlayAssembler do
   - all start words can be appended
   - all not valid words can be filtered out
 
-  TODO bug: it will return multiple copies of the play, it should only be 1 copy
   TODO investigate: will it work if you have "?" as a tile?
-  TODO investigate: will it work if there are no spaces above what's been played?
   TODO investigate: will it work if there are no valid plays on the board? (empty list)
-  TODO ensure we can start at existing letters (rather, just below or right)
-  TODO ensure we are not passing through bad starts
+  TODO investigate: ensure we are not passing through bad starts (maybe not an issue)
   """
   def create_all_plays(
-    %GameInstance{} = game,
+    %GameInstance{board: board} = game,
     %{
       player_key: player_key,
       start_yxs: start_yxs,
       word_starts: word_starts,
     }
   ) do
-    # 1. create every combo of start_yxs & word_starts (which fit?)
-    plays = for start_yx <- start_yxs, word_start <- word_starts, direction <- [:y, :x] do
+    # 1. create every combo of
+    #    * start_yxs (above played tiles) &
+    #    * word_starts (comprised of tiles in tray)
+    plays_1 = for start_yx <- start_yxs, word_start <- word_starts, direction <- [:y, :x] do
       create(game, %{direction: direction, player_key: player_key, start_yx: start_yx, word_start: word_start})
     end
+    |> Enum.filter(fn(%{valid: v}) -> v == true end)
+    # 2. create words "starting" with played tiles
+    #    * start_yxs = squares below & right every played tile as start_yx
+    #    * word_start = for every letter in tray
+    letters_played = board |> GameBoard.to_letter_yx_list()
+    start_yxs = for [add_y, add_x] <- [[0, 1], [1, 0]], [_l, y, x] <- letters_played do
+      [(y + add_y), (x + add_x)]
+    end
+    |> Enum.filter(fn([y, x]) -> GameBoard.exists?(board, y, x) end)
+    |> Enum.filter(fn([y, x]) -> !GameBoard.played?(board, y, x) end)
+    tiles_in_tray = game
+                    |> Map.get(player_key)
+                    |> Map.get(:tiles_in_tray)
+                    |> Enum.map(fn(%{letter: l}) -> [l] end)
+                    |> Enum.uniq()
+    plays_2 = for start_yx <- start_yxs, word_start <- tiles_in_tray, direction <- [:y, :x] do
+      create(game, %{direction: direction, player_key: player_key, start_yx: start_yx, word_start: word_start})
+    end
+    |> Enum.filter(fn(%{valid: v}) -> v == true end)
+
+    plays = plays_1 ++ plays_2
     # no need to consider invalid plays
     plays = plays |> Enum.filter(fn(%{valid: v}) -> v == true end)
     # extend via reducer
     plays
     # this crazy self-recursive reducer will allow us to extend for all tiles in tray
-    |> Enum.reduce(plays, fn(play, acc) -> append_remaining(game, play, acc) end)
+    |> Enum.reduce(plays, fn(play, acc) -> build_plays_matrix_for_for_each_tile(game, play, acc) end)
     # now verify all returned plays are fully valid, and score them
     |> Enum.map(fn(play) -> GamePlay.verify_final_play(play, game) end)
     # now strip all invlid plays
     |> Enum.filter(fn(%{valid: v}) -> v == true end)
+    # now ensure unique by letters_yx (TO-DO: why is this necessary?  optimize reduce)
+    |> Enum.uniq_by(fn(%{letters_yx: v}) -> v end)
     # now sort by score (why not?) [decsending]
     |> Enum.sort(fn(%{score: s1}, %{score: s2}) -> s1 > s2 end)
   end
@@ -67,7 +90,7 @@ defmodule Wordza.PlayAssembler do
     }
   ) do
     letters_yx = play_word_start_y([], start_yx, word_start)
-    player_key |> GamePlay.create(letters_yx) |> GamePlay.verify_start(game)
+    player_key |> GamePlay.create(letters_yx, :y) |> GamePlay.verify_start(game)
   end
   def create(
     %GameInstance{} = game,
@@ -79,7 +102,7 @@ defmodule Wordza.PlayAssembler do
     }
   ) do
     letters_yx = play_word_start_x([], start_yx, word_start)
-    player_key |> GamePlay.create(letters_yx) |> GamePlay.verify_start(game)
+    player_key |> GamePlay.create(letters_yx, :x) |> GamePlay.verify_start(game)
   end
 
   @doc """
@@ -120,16 +143,17 @@ defmodule Wordza.PlayAssembler do
   @doc """
   Appended more plays, using every possible combination of the player's remaining tiles_in_tray
   """
-  def append_remaining(%GameInstance{} = _game, %GamePlay{valid: false} = _play_start, plays), do: plays
-  def append_remaining(%GameInstance{} = _game, %GamePlay{tiles_in_tray: []} = play_start, plays) do
+  def build_plays_matrix_for_for_each_tile(%GameInstance{} = _game, %GamePlay{valid: false} = _play_start, plays), do: plays
+  def build_plays_matrix_for_for_each_tile(%GameInstance{} = _game, %GamePlay{tiles_in_tray: []} = play_start, plays) do
     [play_start | plays]
+    # now ensure unique by letters_yx (TO-DO: why is this necessary?  optimize reduce)
+    |> Enum.uniq_by(fn(%{letters_yx: v}) -> v end)
   end
-  def append_remaining(%GameInstance{} = game, %GamePlay{tiles_in_tray: tiles_in_tray} = play_start, plays) do
+  def build_plays_matrix_for_for_each_tile(%GameInstance{} = game, %GamePlay{tiles_in_tray: tiles_in_tray} = play_start, plays) do
     # add a "next_play" for each tile left in the tray
     next_plays = tiles_in_tray
-                 |> Enum.map(fn(tile) -> append_tile(game, play_start, tile) end)
+                 |> Enum.map(fn(tile) -> build_play_append_tile(game, play_start, tile) end)
                  |> Enum.filter(fn(%{valid: v}) -> v == true end)
-
     case Enum.empty?(next_plays) do
       true -> plays
       false ->
@@ -139,16 +163,17 @@ defmodule Wordza.PlayAssembler do
         next_plays
         |> Enum.reduce(
           plays,
-          fn(play, acc) -> append_remaining(game, play, acc) end
+          fn(play, acc) -> build_plays_matrix_for_for_each_tile(game, play, acc) end
         )
     end
   end
 
   @doc """
-  Append a single tile to a GamePlay (following in the same direction)
-  NOTE assumes the tiles_in_tray has already been removed
+  Generate a new GamePlay by appending a single tile to a GamePlay
+  NOTE this will always following in the same direction as the original play
+  NOTE assumes the new tile has not been removed from tiles_in_tray
   """
-  def append_tile(
+  def build_play_append_tile(
     %GameInstance{} = game,
     %GamePlay{
       board_next: board_next,
@@ -163,9 +188,8 @@ defmodule Wordza.PlayAssembler do
     tile_to_play = tiles_from_tray |> List.first() |> Map.merge(%{y: y, x: x})
     case is_valid_tile_for_play?(tile_to_play, board_next) do
       true ->
-        # we are extending this play, into a new play with this new tile on it
-        #   GOTCHA look out - we will be re-creating the final "play"
-        #   with just the letters_yx
+        # we are "extending" this play, into a new play with this new tile on it
+        # we fake the assign_letters and some early verifies, but do the important stuff here
         tiles_in_play = tiles_in_play ++ [tile_to_play]
         letters_yx = tiles_in_play |> Enum.map(fn(%{letter: l, y: y, x: x}) -> [l, y, x] end)
         play |> Map.merge(%{
@@ -180,20 +204,33 @@ defmodule Wordza.PlayAssembler do
         |> GamePlay.assign_score(game)
       false ->
         play |> Map.merge(%{
-          errors: ["Unable to append_tile"],
+          errors: ["Unable to build_play_append_tile"],
           valid: false,
         })
     end
   end
-  def append_tile(
+  def build_play_append_tile(
     %GameInstance{},
     %GamePlay{} = play,
     %{} = tile
   ), do: play
 
-
   @doc """
   Is about-to-be-played tile a valid tile for the board?
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.PlayAssembler.is_valid_tile_for_play?(%{letter: "a", x: 0, y: 0}, board)
+      true
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.PlayAssembler.is_valid_tile_for_play?(%{letter: nil, x: 0, y: 0}, board)
+      false
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> Wordza.PlayAssembler.is_valid_tile_for_play?(%{letter: "a", x: 9, y: 9}, board)
+      false
   """
   def is_valid_tile_for_play?(%{letter: letter, x: x, y: y}, board) do
     {total_y, total_x, _center_y, _center_x} = GameBoard.measure(board)
@@ -202,11 +239,25 @@ defmodule Wordza.PlayAssembler do
       x >= 0 && x < total_x &&
       !GameBoard.played?(board, y, x)
   end
+  def is_valid_tile_for_play?(_, _), do: false
 
   @doc """
   Find the next playable y+x in a direction (skipping over already played)
+
+  ## Examples
+
+      iex> Wordza.Dictionary.start_link(:mock)
+      iex> game = Wordza.GameInstance.create(:mock, :player_1, :player_2)
+      iex> played = [%{letter: "A", y: 2, x: 0, value: 1}, %{letter: "L", y: 2, x: 1, value: 1}, %{letter: "L", y: 2, x: 2, value: 1}]
+      iex> board = game |> Map.get(:board) |> Wordza.GameBoard.add_letters(played)
+      iex> player_1 = game |> Map.get(:player_1) |> Map.merge(%{tiles_in_tray: Wordza.GameTiles.create(:mock_tray)})
+      iex> game = game |> Map.merge(%{board: board, player_1: player_1})
+      iex> play = Wordza.GamePlay.create(:player_1, [["A", 1, 1]], :y) |> Wordza.GamePlay.verify_start(game)
+      iex> Wordza.PlayAssembler.next_unplayed_yx(play)
+      [3, 1]
+
   """
-  def next_unplayed_yx(%GamePlay{board_next: board, tiles_in_play: tiles_in_play, direction: :y}) do
+  def next_unplayed_yx(%GamePlay{board_next: board, tiles_in_play: tiles_in_play, direction: :y, errors: []}) do
     {total_y, _total_x, _center_y, _center_x} = GameBoard.measure(board)
     last_tile = tiles_in_play
                 |> Enum.sort(fn(%{y: y1}, %{y: y2}) -> y1 < y2 end)
@@ -218,7 +269,7 @@ defmodule Wordza.PlayAssembler do
         |> List.first()
     [y, last_tile.x]
   end
-  def next_unplayed_yx(%GamePlay{board_next: board, tiles_in_play: tiles_in_play, direction: :x}) do
+  def next_unplayed_yx(%GamePlay{board_next: board, tiles_in_play: tiles_in_play, direction: :x, errors: []}) do
     {_total_y, total_x, _center_y, _center_x} = GameBoard.measure(board)
     last_tile = tiles_in_play
                 |> Enum.sort(fn(%{x: x1}, %{x: x2}) -> x1 < x2 end)
@@ -229,6 +280,14 @@ defmodule Wordza.PlayAssembler do
         |> Enum.filter(fn(x) -> !GameBoard.played?(board, last_tile.y, x) end)
         |> List.first()
     [last_tile.y, x]
+  end
+  def next_unplayed_yx(%GamePlay{errors: errors}) do
+    Logger.error("Got an invalid GamePlay for PlayAssembler.next_unplayed_yx(): #{inspect(errors)}")
+    [-1, -1]
+  end
+  def next_unplayed_yx(play) do
+    Logger.error("Got an invalid argument for PlayAssembler.next_unplayed_yx(): #{inspect(play)}")
+    [-1, -1]
   end
 
 end
