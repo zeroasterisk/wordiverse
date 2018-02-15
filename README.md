@@ -1,4 +1,4 @@
-# Word-iverse
+# Wordza
 
 This is an experiment to play with Elixir, OTP, and _(eventually)_ neural networks implemented in Elixir.
 
@@ -6,20 +6,40 @@ This is an experiment to play with Elixir, OTP, and _(eventually)_ neural networ
 
 - [x] Build out a WordFued/Scabble like game in Elixir, via OTP
 - [x] Build a dictionary and rule set to secure the game
-- [ ] Build a basic "look ahead" player bot
+- [x] Build a basic "look ahead" player bot _(see [BotAlec](./lib/bot_alec/))_
+- [ ] Build a system to generate a ton of games and moves
 - [ ] Build a neural network player bot and train
 - [ ] Build a basic lobby (game management) interface
 - [ ] Build a basic API client to connect to WordFued
 
 ### Usage
 
+Run a set of 1000 games, BotAlec vs BotAlec
+
+```
+$ uh... not built yet :(
+```
+
+Fire it up in iex to play with it by hand:
+
+```
+$ iex -S mix
+```
+
 ```ex
-iex> {:ok, pid} = Wordza.Game.start_link(:wordfeud, :bot_lookahead_larry, :bot_lookahead_lester)
+iex> Wordza.Dictionary.start_link(:wordfeud)
+iex> {:ok, pid} = Wordza.Game.start_link(:wordfeud, :bot_alec_a, :bot_alec_b)
 iex> Wordza.Game.get(pid)
 iex> Wordza.Game.board(pid)
 iex> Wordza.Game.player_1(pid)
 iex> Wordza.Game.player_2(pid)
 iex> Wordza.Game.tiles(pid)
+```
+
+And of course, a reasonable test suite:
+
+```
+$ mix test
 ```
 
 ### Resources

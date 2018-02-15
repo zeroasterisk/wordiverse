@@ -1,6 +1,8 @@
-defmodule Wordza.PlayAssembler do
+defmodule Wordza.BotPlayMaker do
   @moduledoc """
-  A useful module/struct for assembling possible plays
+  A set of possibly shared "bits" for all Bots...
+
+  We are going to look at all plays so the bot can pick.
   """
   require Logger
   alias Wordza.GamePlay
@@ -26,7 +28,7 @@ defmodule Wordza.PlayAssembler do
       player_key: player_key,
       start_yxs: start_yxs,
       word_starts: word_starts,
-    }
+    } = _bot
   ) do
     # 1. create every combo of
     #    * start_yxs (above played tiles) &
@@ -34,6 +36,7 @@ defmodule Wordza.PlayAssembler do
     plays_1 = for start_yx <- start_yxs, word_start <- word_starts, direction <- [:y, :x] do
       create(game, %{direction: direction, player_key: player_key, start_yx: start_yx, word_start: word_start})
     end
+    |> Enum.filter(&is_map/1)
     |> Enum.filter(fn(%{valid: v}) -> v == true end)
     # 2. create words "starting" with played tiles
     #    * start_yxs = squares below & right every played tile as start_yx
@@ -52,6 +55,7 @@ defmodule Wordza.PlayAssembler do
     plays_2 = for start_yx <- start_yxs, word_start <- tiles_in_tray, direction <- [:y, :x] do
       create(game, %{direction: direction, player_key: player_key, start_yx: start_yx, word_start: word_start})
     end
+    |> Enum.filter(&is_map/1)
     |> Enum.filter(fn(%{valid: v}) -> v == true end)
 
     plays = plays_1 ++ plays_2
@@ -88,7 +92,7 @@ defmodule Wordza.PlayAssembler do
       start_yx: start_yx,
       word_start: word_start,
     }
-  ) do
+  ) when is_list(start_yx) do
     letters_yx = play_word_start_y([], start_yx, word_start)
     player_key |> GamePlay.create(letters_yx, :y) |> GamePlay.verify_start(game)
   end
@@ -100,9 +104,13 @@ defmodule Wordza.PlayAssembler do
       start_yx: start_yx,
       word_start: word_start,
     }
-  ) do
+  ) when is_list(start_yx) do
     letters_yx = play_word_start_x([], start_yx, word_start)
     player_key |> GamePlay.create(letters_yx, :x) |> GamePlay.verify_start(game)
+  end
+  def create(_game, bot) do
+    Logger.error fn() -> "BotPlayMaker.create fail - invalid bot input: #{inspect(bot)}" end
+    nil
   end
 
   @doc """
@@ -110,7 +118,7 @@ defmodule Wordza.PlayAssembler do
 
   ## Examples
 
-      iex> Wordza.PlayAssembler.play_word_start_y([], [0, 0], ["a", "l", "l"])
+      iex> Wordza.BotPlayMaker.play_word_start_y([], [0, 0], ["a", "l", "l"])
       [
         ["a", 0, 0],
         ["l", 1, 0],
@@ -127,7 +135,7 @@ defmodule Wordza.PlayAssembler do
 
   ## Examples
 
-      iex> Wordza.PlayAssembler.play_word_start_x([], [0, 0], ["a", "l", "l"])
+      iex> Wordza.BotPlayMaker.play_word_start_x([], [0, 0], ["a", "l", "l"])
       [
         ["a", 0, 0],
         ["l", 0, 1],
@@ -221,15 +229,15 @@ defmodule Wordza.PlayAssembler do
   ## Examples
 
       iex> board = Wordza.GameBoard.create(:mock)
-      iex> Wordza.PlayAssembler.is_valid_tile_for_play?(%{letter: "a", x: 0, y: 0}, board)
+      iex> Wordza.BotPlayMaker.is_valid_tile_for_play?(%{letter: "a", x: 0, y: 0}, board)
       true
 
       iex> board = Wordza.GameBoard.create(:mock)
-      iex> Wordza.PlayAssembler.is_valid_tile_for_play?(%{letter: nil, x: 0, y: 0}, board)
+      iex> Wordza.BotPlayMaker.is_valid_tile_for_play?(%{letter: nil, x: 0, y: 0}, board)
       false
 
       iex> board = Wordza.GameBoard.create(:mock)
-      iex> Wordza.PlayAssembler.is_valid_tile_for_play?(%{letter: "a", x: 9, y: 9}, board)
+      iex> Wordza.BotPlayMaker.is_valid_tile_for_play?(%{letter: "a", x: 9, y: 9}, board)
       false
   """
   def is_valid_tile_for_play?(%{letter: letter, x: x, y: y}, board) do
@@ -253,7 +261,7 @@ defmodule Wordza.PlayAssembler do
       iex> player_1 = game |> Map.get(:player_1) |> Map.merge(%{tiles_in_tray: Wordza.GameTiles.create(:mock_tray)})
       iex> game = game |> Map.merge(%{board: board, player_1: player_1})
       iex> play = Wordza.GamePlay.create(:player_1, [["A", 1, 1]], :y) |> Wordza.GamePlay.verify_start(game)
-      iex> Wordza.PlayAssembler.next_unplayed_yx(play)
+      iex> Wordza.BotPlayMaker.next_unplayed_yx(play)
       [3, 1]
 
   """
@@ -282,11 +290,11 @@ defmodule Wordza.PlayAssembler do
     [last_tile.y, x]
   end
   def next_unplayed_yx(%GamePlay{errors: errors}) do
-    Logger.error("Got an invalid GamePlay for PlayAssembler.next_unplayed_yx(): #{inspect(errors)}")
+    Logger.error("Got an invalid GamePlay for BotPlayMaker.next_unplayed_yx(): #{inspect(errors)}")
     [-1, -1]
   end
   def next_unplayed_yx(play) do
-    Logger.error("Got an invalid argument for PlayAssembler.next_unplayed_yx(): #{inspect(play)}")
+    Logger.error("Got an invalid argument for BotPlayMaker.next_unplayed_yx(): #{inspect(play)}")
     [-1, -1]
   end
 

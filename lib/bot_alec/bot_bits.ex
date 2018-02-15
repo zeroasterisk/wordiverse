@@ -1,6 +1,6 @@
 defmodule Wordza.BotBits do
   @moduledoc """
-  A set of shared "bits" for all Bots...
+  A set of possibly shared "bits" for all Bots...
 
   These are utilities for aiding in common functionalities for all/many bots.
 
@@ -105,6 +105,29 @@ defmodule Wordza.BotBits do
   end
 
   @doc """
+  Return all possible start yx squares for an empty board
+
+  ## Examples
+
+      iex> board = Wordza.GameBoard.create(:mock)
+      iex> tiles = Wordza.GameTiles.add([], "a", 1, 7)
+      iex> Wordza.BotBits.get_all_start_yx_first_play(board, tiles)
+      [[2, 0], [2, 1], [2, 2], [0, 2], [1, 2], [2, 2]]
+  """
+  def get_all_start_yx_first_play(board, tiles_in_tray) do
+    {_total_y, _total_x, center_y, center_x} = board |> GameBoard.measure
+    x_count = min(Enum.count(tiles_in_tray), center_x)
+    y_count = min(Enum.count(tiles_in_tray), center_y)
+    horizontal = for x <- Range.new(x_count * -1, 0) do
+      [center_y, center_x + x]
+    end
+    vertical = for y <- Range.new(y_count * -1, 0) do
+      [center_y + y, center_x]
+    end
+    horizontal ++ vertical
+  end
+
+  @doc """
   Get all the possible word-starts for a set of letters
 
   If "?" in letters, sub with each letter of alphabet and join results
@@ -120,6 +143,7 @@ defmodule Wordza.BotBits do
           ["A", "L", "L"],
       ]
   """
+  def get_all_word_starts(_, nil), do: raise "BotBits.get_all_word_starts must have a game.type"
   def get_all_word_starts(letters, type) when is_list(letters) and is_atom(type) do
     letters = GameTiles.clean_letters(letters)
     case Enum.member?(letters, "?") do

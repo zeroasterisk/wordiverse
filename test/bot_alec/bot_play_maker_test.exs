@@ -1,7 +1,7 @@
-defmodule PlayAssemblerTest do
+defmodule BotPlayMakerTest do
   use ExUnit.Case
-  doctest Wordza.PlayAssembler
-  alias Wordza.PlayAssembler
+  doctest Wordza.BotPlayMaker
+  alias Wordza.BotPlayMaker
   alias Wordza.GameBoard
   alias Wordza.BotBits
 
@@ -31,7 +31,7 @@ defmodule PlayAssemblerTest do
       tiles_in_tray = state[:game] |> Map.get(:player_1) |> Map.get(:tiles_in_tray)
       start_yxs = BotBits.get_all_start_yx(board, tiles_in_tray)
       word_starts = BotBits.get_all_word_starts(tiles_in_tray, type)
-      plays = PlayAssembler.create_all_plays(state[:game], %{
+      plays = BotPlayMaker.create_all_plays(state[:game], %{
         player_key: :player_1,
         start_yxs: start_yxs,
         word_starts: word_starts,
@@ -94,7 +94,7 @@ defmodule PlayAssemblerTest do
       word_starts = BotBits.get_all_word_starts(tiles_in_tray, type)
 
       assert Enum.empty?(start_yxs) == true
-      plays = PlayAssembler.create_all_plays(game, %{
+      plays = BotPlayMaker.create_all_plays(game, %{
         player_key: :player_1,
         start_yxs: start_yxs,
         word_starts: word_starts,
@@ -142,7 +142,7 @@ defmodule PlayAssemblerTest do
     test "create should create nil for unplayable word 'A' (wrong length)", state do
       start_yx = [0, 2]
       word_start = ["A"]
-      play = %Wordza.GamePlay{} = PlayAssembler.create(state[:game], %{
+      play = %Wordza.GamePlay{} = BotPlayMaker.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
@@ -154,7 +154,7 @@ defmodule PlayAssemblerTest do
     test "create should create nil for unplayable word 'ALL' (wrong length)", state do
       start_yx = [0, 2]
       word_start = ["A", "L", "L"]
-      play = %Wordza.GamePlay{} = PlayAssembler.create(state[:game], %{
+      play = %Wordza.GamePlay{} = BotPlayMaker.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
@@ -166,7 +166,7 @@ defmodule PlayAssemblerTest do
     test "create should create nil for unplayable word 'BS' (not in tray)", state do
       start_yx = [0, 2]
       word_start = ["B", "S"]
-      play = %Wordza.GamePlay{} = PlayAssembler.create(state[:game], %{
+      play = %Wordza.GamePlay{} = BotPlayMaker.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
@@ -178,7 +178,7 @@ defmodule PlayAssemblerTest do
     test "create should create nil for unplayable word 'ALL' (no played letter, in y direction)", state do
       start_yx = [0, 3]
       word_start = ["A", "L"]
-      play = %Wordza.GamePlay{} = PlayAssembler.create(state[:game], %{
+      play = %Wordza.GamePlay{} = BotPlayMaker.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
@@ -190,7 +190,7 @@ defmodule PlayAssemblerTest do
     test "create should create a play for playable word 'AL'", state do
       start_yx = [0, 2]
       word_start = ["A", "L"]
-      play = %Wordza.GamePlay{} = PlayAssembler.create(state[:game], %{
+      play = %Wordza.GamePlay{} = BotPlayMaker.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
@@ -221,7 +221,7 @@ defmodule PlayAssemblerTest do
     test "create should create a play for a word 'L' after the already played 'A'", state do
       start_yx = [3, 0]
       word_start = ["L"]
-      play = %Wordza.GamePlay{} = PlayAssembler.create(state[:game], %{
+      play = %Wordza.GamePlay{} = BotPlayMaker.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
@@ -259,14 +259,14 @@ defmodule PlayAssemblerTest do
       game = state[:game] |> Map.merge(%{player_1: player})
       start_yx = [0, 2]
       word_start = ["A", "L"]
-      play = PlayAssembler.create(game, %{
+      play = BotPlayMaker.create(game, %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
         word_start: word_start,
       })
 
-      plays = PlayAssembler.build_plays_matrix_for_for_each_tile(game, play, [])
+      plays = BotPlayMaker.build_plays_matrix_for_for_each_tile(game, play, [])
       assert Enum.empty?(plays)
     end
     test "build_plays_matrix_for_for_each_tile should create set of plays (with the remaining tiles = 1 - valid)", state do
@@ -280,13 +280,13 @@ defmodule PlayAssemblerTest do
       game = state[:game] |> Map.merge(%{player_1: player})
       start_yx = [0, 0]
       word_start = ["A", "L"]
-      play = PlayAssembler.create(game, %{
+      play = BotPlayMaker.create(game, %{
         direction: :y,
         player_key: :player_1,
         start_yx: start_yx,
         word_start: word_start,
       })
-      plays = PlayAssembler.build_plays_matrix_for_for_each_tile(game, play, [])
+      plays = BotPlayMaker.build_plays_matrix_for_for_each_tile(game, play, [])
       assert Enum.count(plays) == 1
       play = List.first(plays)
       assert play.tiles_in_play == [
@@ -300,26 +300,26 @@ defmodule PlayAssemblerTest do
       assert play.score == 12
     end
     test "next_unplayed_yx should allow y=3 (y=2 was played)", state do
-      play = PlayAssembler.create(state[:game], %{
+      play = BotPlayMaker.create(state[:game], %{
         direction: :y,
         player_key: :player_1,
         start_yx: [0, 0],
         word_start: ["A", "L"],
       })
-      assert PlayAssembler.next_unplayed_yx(play) == [3, 0]
+      assert BotPlayMaker.next_unplayed_yx(play) == [3, 0]
     end
     test "next_unplayed_yx should allow y=4 (y=2&3 were played)", state do
       board = state[:game]
               |> Map.get(:board)
               |> GameBoard.add_letters([%{letter: "N", y: 3, x: 0, value: 1}])
       game = state[:game] |> Map.merge(%{board: board})
-      play = PlayAssembler.create(game, %{
+      play = BotPlayMaker.create(game, %{
         direction: :y,
         player_key: :player_1,
         start_yx: [0, 0],
         word_start: ["A", "L"],
       })
-      assert PlayAssembler.next_unplayed_yx(play) == [4, 0]
+      assert BotPlayMaker.next_unplayed_yx(play) == [4, 0]
     end
   end
 end
