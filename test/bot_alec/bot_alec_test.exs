@@ -25,7 +25,7 @@ defmodule BotAlecTest do
       board = state[:game] |> Map.get(:board) |> GameBoard.add_letters(played)
       game = state[:game] |> Map.merge(%{board: board})
       play = BotAlec.play(:player_1, game)
-      assert play.score == 16
+      assert play.score == 16 # (got a :dw twice!)
       assert play.board_next |> GameBoard.to_list == [
         [nil, nil, nil, nil, nil],
         [nil, "A", nil, nil, nil],
@@ -45,7 +45,7 @@ defmodule BotAlecTest do
     end
     test "play should pick best first play", state do
       play = BotAlec.play(:player_1, state[:game])
-      assert play.score == 12
+      assert play.score == 12 # (got a :st + :tl!)
       assert play.board_next |> GameBoard.to_list == [
         [nil, nil, nil, nil, nil],
         [nil, nil, "A", nil, nil],

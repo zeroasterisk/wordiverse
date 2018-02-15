@@ -138,8 +138,10 @@ defmodule Wordza.GamePlay do
     %GamePlay{tiles_in_play: tiles_in_play, words: words, errors: []} = play,
     %GameInstance{} = _game
   ) do
-    words = words_bonuses_only_on_played(words, tiles_in_play)
-    score = words |> Enum.map(&score_word/1) |> Enum.sum()
+    score = words
+            |> words_bonuses_only_on_played(tiles_in_play)
+            |> words_filter_only_on_played(tiles_in_play)
+            |> Enum.map(&score_word/1) |> Enum.sum()
     play |> Map.merge(%{score: score})
   end
   def assign_score(%GamePlay{} = play, %GameInstance{} = _game), do: play
@@ -193,6 +195,31 @@ defmodule Wordza.GamePlay do
   """
   def words_bonuses_only_on_played(words, tiles_in_play) do
     words |> Enum.map(fn(word) -> word_bonuses_only_on_played(word, tiles_in_play) end)
+  end
+
+  @doc """
+  We only allow bonuses on letters/squares which were just played
+
+  ## Examples
+
+      iex> word_1 = [%{bonus: :tl, letter: "A", y: 0, x: 2}, %{bonus: nil, letter: "L", y: 1, x: 2}, %{bonus: nil, letter: "L", y: 2, x: 2}]
+      iex> word_2 = [%{bonus: :tl, letter: "A", y: 2, x: 0}, %{bonus: nil, letter: "L", y: 2, x: 1}, %{bonus: nil, letter: "L", y: 2, x: 2}]
+      iex> words = [word_1, word_2]
+      iex> Wordza.GamePlay.words_filter_only_on_played(words, [["A", 0, 2]])
+      [[
+        %{bonus: :tl, letter: "A", y: 0, x: 2},
+        %{bonus: nil, letter: "L", y: 1, x: 2},
+        %{bonus: nil, letter: "L", y: 2, x: 2}
+      ]]
+  """
+  def words_filter_only_on_played(words, tiles_in_play) do
+    letters_yx = tiles_to_letters_yx([], tiles_in_play)
+    set_yx_in_play = letters_yx |> Enum.map(fn([_letter, y, x]) -> [y, x] end) |> MapSet.new()
+    words |> Enum.filter(fn(word) ->
+      set_yx_word = word |> Enum.map(fn(%{y: y, x: x}) -> [y, x] end) |> MapSet.new()
+      set_yx_played = set_yx_in_play |> MapSet.intersection(set_yx_word)
+      !Enum.empty?(set_yx_played)
+    end)
   end
 
   @doc """

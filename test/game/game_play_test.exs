@@ -315,6 +315,62 @@ defmodule GamePlayTest do
         GamePlay.verify_words_are_full_words(play, game)
       ) == ["Not In Dictionary, unknown words: DA, NL, DN"]
     end
+    test "assign_score with only 1 word played", state do
+      # play the horizontal letters
+      tiles_in_play = [
+        %{y: 2, x: 0, letter: "A", value: 1},
+        %{y: 2, x: 1, letter: "L", value: 1},
+      ]
+      words = [
+        [
+          %{bonus: :tl, letter: "A", value: 1, y: 0, x: 2},
+          %{bonus: nil, letter: "L", value: 1, y: 1, x: 2},
+          %{bonus: :st, letter: "L", value: 1, y: 2, x: 2}
+        ],
+        [
+          %{bonus: :tl, letter: "A", value: 1, y: 2, x: 0},
+          %{bonus: nil, letter: "L", value: 1, y: 2, x: 1},
+          %{bonus: :st, letter: "L", value: 1, y: 2, x: 2},
+        ]
+      ]
+      play = %GamePlay{
+        tiles_in_play: tiles_in_play,
+        words: words,
+        errors: []
+      }
+      play_after = Wordza.GamePlay.assign_score(play, %Wordza.GameInstance{})
+      # we get points for the words touching played tiles, but not both words
+      #   3*A + L + L (no bonus)
+      assert play_after.score == 5
+    end
+    test "assign_score with 2 words played", state do
+      # play the center tile (impossible, but we can fake it in tests)
+      tiles_in_play = [
+        %{y: 2, x: 2, letter: "L", value: 1},
+      ]
+      words = [
+        [
+          %{bonus: :tl, letter: "A", value: 1, y: 0, x: 2},
+          %{bonus: nil, letter: "L", value: 1, y: 1, x: 2},
+          %{bonus: :st, letter: "L", value: 1, y: 2, x: 2}
+        ],
+        [
+          %{bonus: :tl, letter: "A", value: 1, y: 2, x: 0},
+          %{bonus: nil, letter: "L", value: 1, y: 2, x: 1},
+          %{bonus: :st, letter: "L", value: 1, y: 2, x: 2},
+        ]
+      ]
+      play = %GamePlay{
+        tiles_in_play: tiles_in_play,
+        words: words,
+        errors: []
+      }
+      play_after = Wordza.GamePlay.assign_score(play, %Wordza.GameInstance{})
+      # we get points for the both words touching played tiles (and bonuses)
+      #   A + L + L (:st = 2*word) = 6
+      #   A + L + L (:st = 2*word) = 6
+      assert play_after.score == 12
+    end
 
   end
 
