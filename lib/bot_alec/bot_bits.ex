@@ -157,8 +157,10 @@ defmodule Wordza.BotBits do
         #  IDEA get a normal list of all words without the "?"
         #       and for each "?" add every possible "next" letter to every word
         words = Wordza.Dictionary.get_all_word_starts(type, letters)
-        Enum.reduce(
-          expand_blanks(Enum.filter(letters, fn(l) -> l == "?" end)),
+        letters
+        |> Enum.filter(fn(l) -> l == "?" end)
+        |> expand_blanks()
+        |> Enum.reduce(
           words,
           fn(letter, words) ->
             Wordza.Dictionary.get_all_word_starts(type, [letter | letters])
@@ -184,7 +186,7 @@ defmodule Wordza.BotBits do
   def expand_blanks(letters) do
     case Enum.member?(letters, "?") do
       false -> letters
-      true -> Enum.reduce(letters, [], &expand_blank/2) |> Enum.reverse()
+      true -> letters |> Enum.reduce([], &expand_blank/2) |> Enum.reverse() |> expand_blanks()
     end
   end
   defp expand_blank("?", acc) do

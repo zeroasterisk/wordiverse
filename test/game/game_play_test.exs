@@ -315,7 +315,7 @@ defmodule GamePlayTest do
         GamePlay.verify_words_are_full_words(play, game)
       ) == ["Not In Dictionary, unknown words: DA, NL, DN"]
     end
-    test "assign_score with only 1 word played", state do
+    test "assign_score with only 1 word played", _state do
       # play the horizontal letters
       tiles_in_play = [
         %{y: 2, x: 0, letter: "A", value: 1},
@@ -343,7 +343,7 @@ defmodule GamePlayTest do
       #   3*A + L + L (no bonus)
       assert play_after.score == 5
     end
-    test "assign_score with 2 words played", state do
+    test "assign_score with 2 words played", _state do
       # play the center tile (impossible, but we can fake it in tests)
       tiles_in_play = [
         %{y: 2, x: 2, letter: "L", value: 1},

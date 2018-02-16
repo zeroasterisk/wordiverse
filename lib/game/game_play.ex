@@ -175,10 +175,11 @@ defmodule Wordza.GamePlay do
   defp apply_bonus_letter(%{bonus: :dl, value: value} = l), do: l |> Map.merge(%{bonus: nil, value: value * 2})
   defp apply_bonus_letter(%{} = l), do: l
   defp apply_bonus_word(score, []), do: score
-  defp apply_bonus_word(score, [%{bonus: :tw} = _played | word]), do: (score * 3) |> apply_bonus_word(word)
-  defp apply_bonus_word(score, [%{bonus: :dw} = _played | word]), do: (score * 2) |> apply_bonus_word(word)
-  defp apply_bonus_word(score, [%{bonus: :st} = _played | word]), do: (score * 2) |> apply_bonus_word(word)
+  defp apply_bonus_word(score, [%{bonus: :tw} = _played | word]), do: score |> product(3) |> apply_bonus_word(word)
+  defp apply_bonus_word(score, [%{bonus: :dw} = _played | word]), do: score |> product(2) |> apply_bonus_word(word)
+  defp apply_bonus_word(score, [%{bonus: :st} = _played | word]), do: score |> product(2) |> apply_bonus_word(word)
   defp apply_bonus_word(score, [%{} = _played | word]), do: score |> apply_bonus_word(word)
+  defp product(score, multiplier), do: score * multiplier
 
   @doc """
   We only allow bonuses on letters/squares which were just played
@@ -450,7 +451,7 @@ defmodule Wordza.GamePlay do
   """
   def verify_letters_are_on_board(
     %GamePlay{letters_yx: letters_yx, errors: []} = play,
-    %GameInstance{board: board} = game
+    %GameInstance{board: board} = _game
   ) do
     {total_y, total_x, _center_y, _center_x} = GameBoard.measure(board)
     all_good = letters_yx |> Enum.all?(fn([_letter, y, x]) ->
@@ -470,8 +471,8 @@ defmodule Wordza.GamePlay do
   NOTE this is actually done in assign_letters, but we can check for them here
   """
   def verify_letters_in_tray(
-    %GamePlay{player_key: player_key, letters_yx: letters_yx, tiles_in_play: tiles_in_play, errors: []} = play,
-    %GameInstance{} = game
+    %GamePlay{letters_yx: letters_yx, tiles_in_play: tiles_in_play, errors: []} = play,
+    %GameInstance{} = _game
   ) do
     letters_in_play = letters_yx |> Enum.map(fn([letter, _, _]) -> letter end)
     count_tiles_in_play = Enum.count(tiles_in_play)

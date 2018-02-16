@@ -3,7 +3,6 @@ defmodule BotAlecTest do
   doctest Wordza.BotAlec
   alias Wordza.BotAlec
   alias Wordza.GameBoard
-  alias Wordza.GameTiles
 
   describe "mock board played on" do
     setup do

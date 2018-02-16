@@ -220,7 +220,7 @@ defmodule Wordza.BotPlayMaker do
   def build_play_append_tile(
     %GameInstance{},
     %GamePlay{} = play,
-    %{} = tile
+    %{} = _tile
   ), do: play
 
   @doc """
