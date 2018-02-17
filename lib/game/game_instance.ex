@@ -3,6 +3,7 @@ defmodule Wordza.GameInstance do
   This is actions taken on our Wordza Game
   """
   defstruct [
+    name: nil,
     type: nil,
     board: nil,
     tiles_in_pile: nil,
@@ -26,7 +27,12 @@ defmodule Wordza.GameInstance do
 
   """
   def create(type, player_1_id, player_2_id) do
+    name = Wordza.GameInstance.build_game_name(type)
+    create(type, player_1_id, player_2_id, name)
+  end
+  def create(type, player_1_id, player_2_id, name) do
     %Wordza.GameInstance{
+      name: name,
       type: type,
       board: Wordza.GameBoard.create(type),
       tiles_in_pile: Wordza.GameTiles.create(type),
@@ -62,6 +68,19 @@ defmodule Wordza.GameInstance do
     game
     |> Map.put(:tiles_in_pile, tiles_in_pile)
     |> Map.put(player_key, Map.put(player, :tiles_in_tray, tiles_in_tray))
+  end
+
+  @doc """
+  Build a unique name for each game
+  """
+  def build_game_name(type) do
+    [
+      "game",
+      Atom.to_string(type),
+      DateTime.utc_now() |> DateTime.to_unix(),
+      :rand.uniform(9999),
+      :rand.uniform(9999),
+    ] |> Enum.join("_")
   end
 
 end

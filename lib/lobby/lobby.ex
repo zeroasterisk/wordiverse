@@ -76,7 +76,7 @@ defmodule Wordza.Lobby do
   end
   def handle_call({:create_game, type, player_1_id, player_2_id}, _from, state) do
     # Build a game name for this Game
-    name = build_game_name(type)
+    name = Wordza.GameInstance.build_game_name(type)
     case Wordza.Game.start_link(type, player_1_id, player_2_id, name) do
       {:ok, pid} ->
         # If the Game dies, we want to know about it (see handle_info for capture)
@@ -153,7 +153,6 @@ defmodule Wordza.Lobby do
       iex> Wordza.Lobby.filterer(%{type: :x}, %{type: :y})
       false
   """
-  def filterer(game, %{}), do: true
   def filterer(game, %{type: type} = filter) do
     case Map.get(game, :type) == type || is_nil(type) do
       true -> filterer(game, filter |> Map.delete(:type))
@@ -172,18 +171,6 @@ defmodule Wordza.Lobby do
       false -> false
     end
   end
-
-  @doc """
-  Build a unique name for each game
-  """
-  defp build_game_name(type) do
-    [
-      "game",
-      Atom.to_string(type),
-      DateTime.utc_now() |> DateTime.to_unix(),
-      :rand.uniform(9999),
-      :rand.uniform(9999),
-    ] |> Enum.join("_")
-  end
+  def filterer(game, %{}), do: true
 
 end

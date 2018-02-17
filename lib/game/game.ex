@@ -29,39 +29,36 @@ defmodule Wordza.Game do
     returns {:error, {:already_started, #PID<0.248.0>}}
   """
   def start_link(type, player_1_id, player_2_id) do
-    GenServer.start_link(
-      __MODULE__,
-      [type, player_1_id, player_2_id],
-      [
-        timeout: 30_000, # 30 seconds to init or die
-      ]
-    )
+    name = Wordza.GameInstance.build_game_name(type)
+    start_link(type, player_1_id, player_2_id, name)
   end
   def start_link(type, player_1_id, player_2_id, name) do
     GenServer.start_link(
       __MODULE__,
-      [type, player_1_id, player_2_id],
+      [type, player_1_id, player_2_id, name],
       [
         timeout: 30_000, # 30 seconds to init or die
-        name: via_tuple(name),
+        name: via_tuple(name), # named game (optionally eaiser to lookup)
       ]
     )
   end
-  def get(pid, key \\ :board), do: GenServer.call(pid, {:get, key})
-  def board(pid), do: get(pid, :board)
-  def player_1(pid), do: get(pid, :player_1)
-  def player_2(pid), do: get(pid, :player_2)
-  def tiles(pid), do: get(pid, :tiles)
+  def get(pid_or_name, key \\ :board)
+  def get(pid, key) when is_pid(pid), do: pid |> GenServer.call({:get, key})
+  def get(name, key), do: name |> via_tuple |> GenServer.call({:get, key})
+  def board(pid_or_name), do: get(pid_or_name, :board)
+  def player_1(pid_or_name), do: get(pid_or_name, :player_1)
+  def player_2(pid_or_name), do: get(pid_or_name, :player_2)
+  def tiles(pid_or_name), do: get(pid_or_name, :tiles)
 
   ### Server API
 
   @doc """
 
   """
-  def init([type, player_1_id, player_2_id]) do
+  def init([type, player_1_id, player_2_id, name]) do
     allowed = [:scrabble, :wordfeud, :mock]
     case Enum.member?(allowed, type) do
-      true -> {:ok, Wordza.GameInstance.create(type, player_1_id, player_2_id)}
+      true -> {:ok, Wordza.GameInstance.create(type, player_1_id, player_2_id, name)}
       false -> {:error, "Invalid type supplied to Game init #{type}"}
     end
   end
@@ -85,4 +82,5 @@ defmodule Wordza.Game do
   defp via_tuple(name) do
     {:via, :gproc, {:n, :l, {:wordza_game, name}}}
   end
+
 end
