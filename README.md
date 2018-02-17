@@ -7,10 +7,18 @@ This is an experiment to play with Elixir, OTP, and _(eventually)_ neural networ
 - [x] Build out a WordFued/Scabble like game in Elixir, via OTP
 - [x] Build a dictionary and rule set to secure the game
 - [x] Build a basic "look ahead" player bot _(see [BotAlec](./lib/bot_alec/))_
-- [ ] Build a system to generate a ton of games and moves
+- [x] Build a basic lobby (game management) interface
+  - [ ] Build GameAutoPlay as a new GenServer, receive game_pid,
+        loop, build play, play it, repeat until done, log and save
+- [ ] Build a GameLog interface
+  - [ ] log full data to a CSV file
+  - [ ] log short data to a CSV file
+  - [ ] log summary data to a CSV file
 - [ ] Build a neural network player bot and train
-- [ ] Build a basic lobby (game management) interface
 - [ ] Build a basic API client to connect to WordFued
+- [ ] Build an external API interface
+- [ ] Build a crappy UI (show what we've got)
+- [ ] Build a fancy UI (full game)
 
 ### Usage
 
