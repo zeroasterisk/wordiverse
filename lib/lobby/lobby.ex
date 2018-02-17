@@ -42,6 +42,9 @@ defmodule Wordza.Lobby do
   def list_games(%{} = filter) do
     GenServer.call(__MODULE__, {:list_games, filter})
   end
+  def list_games() do
+    GenServer.call(__MODULE__, {:list_games, %{}})
+  end
 
   @doc """
   End a currently running game
@@ -119,9 +122,9 @@ defmodule Wordza.Lobby do
   end
 
   # helpers to get name or pid from state
-  def get_pid(pid_or_name, state) when is_pid(pid), do: pid
-  def get_pid(pid_or_name, state) when is_bitstring(name) do
-    state |> Map.get(name) |> Map.get(:pid)
+  def get_pid(pid_or_name, state) when is_pid(pid_or_name), do: pid_or_name
+  def get_pid(pid_or_name, state) when is_bitstring(pid_or_name) do
+    state |> Map.get(pid_or_name) |> Map.get(:pid)
   end
   def get_name(pid, state) when is_pid(pid) do
     names = state
