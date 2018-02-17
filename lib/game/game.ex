@@ -37,6 +37,16 @@ defmodule Wordza.Game do
       ]
     )
   end
+  def start_link(type, player_1_id, player_2_id, name) do
+    GenServer.start_link(
+      __MODULE__,
+      [type, player_1_id, player_2_id],
+      [
+        timeout: 30_000, # 30 seconds to init or die
+        name: via_tuple(name),
+      ]
+    )
+  end
   def get(pid, key \\ :board), do: GenServer.call(pid, {:get, key})
   def board(pid), do: get(pid, :board)
   def player_1(pid), do: get(pid, :player_1)
@@ -71,6 +81,8 @@ defmodule Wordza.Game do
     {:reply, Map.get(state, :tiles_in_pile), state}
   end
 
-
-
+  # Fancy name <-> pid refernce library `gproc`
+  defp via_tuple(name) do
+    {:via, :gproc, {:n, :l, {:wordza_game, name}}}
+  end
 end
