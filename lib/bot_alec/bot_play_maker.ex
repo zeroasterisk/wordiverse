@@ -71,7 +71,7 @@ defmodule Wordza.BotPlayMaker do
     |> Enum.filter(fn(%{valid: v}) -> v == true end)
     # now ensure unique by letters_yx (TO-DO: why is this necessary?  optimize reduce)
     |> Enum.uniq_by(fn(%{letters_yx: v}) -> v end)
-    # now sort by score (why not?) [decsending]
+    # now sort by score - that's the point [descending]
     |> Enum.sort(fn(%{score: s1}, %{score: s2}) -> s1 > s2 end)
   end
 

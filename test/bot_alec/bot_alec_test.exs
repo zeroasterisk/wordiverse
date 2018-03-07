@@ -23,7 +23,7 @@ defmodule BotAlecTest do
       ]
       board = state[:game] |> Map.get(:board) |> GameBoard.add_letters(played)
       game = state[:game] |> Map.merge(%{board: board})
-      play = BotAlec.play(:player_1, game)
+      {:ok, play} = BotAlec.make_play(:player_1, game)
       assert play.score == 16 # (got a :dw twice!)
       assert play.board_next |> GameBoard.to_list == [
         [nil, nil, nil, nil, nil],
@@ -43,7 +43,8 @@ defmodule BotAlecTest do
       ]
     end
     test "play should pick best first play", state do
-      play = BotAlec.play(:player_1, state[:game])
+      game = state[:game]
+      {:ok, play} = BotAlec.make_play(:player_1, game)
       assert play.score == 12 # (got a :st + :tl!)
       assert play.board_next |> GameBoard.to_list == [
         [nil, nil, nil, nil, nil],
@@ -54,7 +55,7 @@ defmodule BotAlecTest do
       ]
       assert play.tiles_in_play == [
         %Wordza.GameTile{letter: "A", value: 1, x: 2, y: 1},
-        %Wordza.GameTile{letter: "L", value: 1, y: 2, x: 2},
+        %Wordza.GameTile{letter: "L", value: 1, x: 2, y: 2},
         %Wordza.GameTile{letter: "A", value: 1, x: 2, y: 3},
         %Wordza.GameTile{letter: "N", value: 1, x: 2, y: 4},
       ]

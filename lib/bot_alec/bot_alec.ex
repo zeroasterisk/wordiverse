@@ -14,7 +14,7 @@ defmodule Wordza.BotAlec do
   alias Wordza.BotAlec
   alias Wordza.BotBits
   alias Wordza.GameInstance
-  alias Wordza.GamePlayer
+  # alias Wordza.GamePlayer
   # alias Wordza.GamePlay
   alias Wordza.GameBoard
   alias Wordza.BotPlayMaker
@@ -50,7 +50,7 @@ defmodule Wordza.BotAlec do
 
   TODO <-- get from GameInstance
   """
-  def play(
+  def make_play(
     player_key,
     %GameInstance{
       board: board,
@@ -91,26 +91,67 @@ defmodule Wordza.BotAlec do
   defp assign_all_plays(%BotAlec{} = bot, %GameInstance{} = game) do
     bot |> Map.merge(%{plays: BotPlayMaker.create_all_plays(game, bot)})
   end
-  defp choose_play(%BotAlec{plays: plays} = _bot) do
-    plays
-    # all of this should be done already by BotPlayMaker.create_all_plays
-    # |> Enum.filter(fn(%{valid: v}) -> v == true end)
-    # now sort by score (why not?) [decsending]
-    # |> Enum.sort(fn(%{score: s1}, %{score: s2}) -> s1 > s2 end)
-    |> List.first()
+  defp choose_play(%BotAlec{plays: []} = _bot) do
+    {:pass, nil}
+  end
+  defp choose_play(%BotAlec{plays: plays} = _bot) when is_list(plays) do
+    play = plays
+          # all of this should be done already by BotPlayMaker.create_all_plays
+          |> Enum.filter(fn(%{valid: v}) -> v == true end)
+          # pre-sort by tiles_in_play (mostly just for consistancy)
+          # now sort by score
+          #   score (most important) that's the point [descending]
+          #   tiles_in_play (we want a deterministic consistancy for testing)
+          |> Enum.sort(fn(%{
+            score: s1,
+            tiles_in_play: x1
+          },
+          %{
+            score: s2,
+            tiles_in_play: x2
+          }) -> score_sort(s1, x1) > score_sort(s2, x2) end)
+          # we only want the first
+          |> List.first()
+    {:ok, play}
+  end
+  # we want to convert tiles_in_play to a numeric value for deterministic sorting
+  defp score_sort(score, tiles_in_play) do
+    letter_count = tiles_in_play |> Enum.count()
+    letters = tiles_in_play
+              |> Enum.map(fn(%{letter: l}) -> l end)
+              |> Enum.join()
+    letter_sum = letters
+                 |> String.to_charlist()
+                 |> Enum.sum()
+    x_sum = tiles_in_play
+            |> Enum.map(fn(%{x: x}) -> x end)
+            |> Enum.sum()
+    y_sum = tiles_in_play
+            |> Enum.map(fn(%{y: y}) -> y end)
+            |> Enum.sum()
+    [
+      # score is the most important, always
+      (score * 1_000_000_000),
+      # number of letters is next most important
+      (letter_count * 1_000_000),
+      # then some junk to ensure we are always sorting the same
+      (letter_sum * 1_000),
+      (x_sum * 10),
+      (y_sum),
+    ] |> Enum.sum()
   end
 
 
   # debug some possible plays
-  defp debug_show_all_plays(%{plays: plays} = bot) do
-    plays |> Enum.each(fn(%{board_next: board_next, score: score}) ->
-      IO.puts ""
-      IO.puts "option: score = #{score}"
-      IO.puts GameBoard.to_string(board_next)
-    end)
-
-    bot
-  end
+  # defp debug_show_all_plays(%{plays: plays} = bot) do
+  #   plays |> Enum.each(fn(%{board_next: board_next, score: score}) ->
+  #     IO.puts ""
+  #     IO.puts "option: score = #{score}"
+  #     IO.puts GameBoard.to_string(board_next)
+  #   end)
+  #
+  #   bot
+  # end
 
 end
 
