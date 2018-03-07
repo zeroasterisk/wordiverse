@@ -1,3 +1,29 @@
+defmodule Wordza.GamePass do
+  @moduledoc """
+  This is a single pass on our Wordza Game
+  used to log that this player could not play
+  (grab a snapshot of the letters/board if you want to)
+  """
+  defstruct [
+    player_key: nil,
+    board: nil, # currnet board not allowing a play (optional debug)
+    tiles_in_tray: [], # tiles in tray, not allowing a play
+    timestamp: nil, # set via apply_pass
+  ]
+  def create(player_key) do
+    %Wordza.GamePass{
+      player_key: player_key,
+    }
+  end
+  def create(player_key, game) do
+    player = game |> Map.get(player_key)
+    %Wordza.GamePass{
+      player_key: player_key,
+      board: game |> Map.get(:board),
+      tiles_in_tray: player |> Map.get(:tiles_in_tray),
+    }
+  end
+end
 defmodule Wordza.GamePlay do
   @moduledoc """
   This is a single play on our Wordza Game
@@ -27,6 +53,7 @@ defmodule Wordza.GamePlay do
     valid: nil,
     words: [],
     errors: [],
+    timestamp: nil, # set via apply_play
   ]
 
   @doc """
