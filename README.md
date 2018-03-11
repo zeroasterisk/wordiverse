@@ -2,23 +2,33 @@
 
 This is an experiment to play with Elixir, OTP, and _(eventually)_ neural networks implemented in Elixir.
 
-### Roadmap
+### Roadmap: Main
 
 - [x] Build out a WordFued/Scabble like game in Elixir, via OTP
 - [x] Build a dictionary and rule set to secure the game
 - [x] Build a basic "look ahead" player bot _(see [BotAlec](./lib/bot_alec/))_
-- [x] Build a basic lobby (game management) interface
-  - [ ] Build GameAutoPlay as a new GenServer, receive game_pid,
+- [x] Build a basic tournement (game management) interface
+  - [x] Build GameAutoPlay as a new GenServer, receive game_pid,
         loop, build play, play it, repeat until done, log and save
-- [ ] Build a GameLog interface
+  - [ ] Build an easy system to start a lot of games, run several in parallel, and build a history
+  - [ ] Build an easy system to view and monitor games in progress (stats as it runs)
+- [ ] Build a GameLog interface (mongo?)
   - [ ] log full data to a CSV file
   - [ ] log short data to a CSV file
   - [ ] log summary data to a CSV file
-- [ ] Build a neural network player bot and train
 - [ ] Build a basic API client to connect to WordFued
 - [ ] Build an external API interface
 - [ ] Build a crappy UI (show what we've got)
 - [ ] Build a fancy UI (full game)
+
+### Roadmap: ML Bot: Read from Logs of Games
+
+- [ ] New Project: start with logs of real-world games
+
+### Roadmap: ML Bot: Neural Network Reinforement Learning
+
+- [ ] New Project: start with tic tac toe for reinforcement learning
+- [ ] Build a neural network player bot and train
 
 ### Usage
 
@@ -78,3 +88,6 @@ $ mix test
 - http://www.automatingthefuture.com/blog/2016/9/7/artificial-neural-networks-elixir-and-you
 - https://github.com/TheQuengineer/deepnet
 - https://www.dailydrip.com/topics/elixir/drips/implementing-a-simple-neural-network-in-elixir
+
+#### Reinformcement learning for TF
+- https://github.com/reinforceio/tensorforce
