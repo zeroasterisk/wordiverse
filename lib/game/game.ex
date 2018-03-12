@@ -55,6 +55,8 @@ defmodule Wordza.Game do
   def player_1(pid_or_name), do: get(pid_or_name, :player_1)
   def player_2(pid_or_name), do: get(pid_or_name, :player_2)
   def tiles(pid_or_name), do: get(pid_or_name, :tiles)
+  def turn(pid_or_name), do: get(pid_or_name, :turn)
+  def game_over?(pid_or_name), do: get(pid_or_name, :turn) == :game_over
 
   @doc """
   submit a play for this game (from a UI)
@@ -102,6 +104,9 @@ defmodule Wordza.Game do
   end
   def handle_call({:get, :tiles}, _from, state) do
     {:reply, Map.get(state, :tiles_in_pile), state}
+  end
+  def handle_call({:get, :turn}, _from, state) do
+    {:reply, Map.get(state, :turn), state}
   end
   def handle_call({:play, _player_key, %GamePlay{} = play}, _from, state) do
     case GameInstance.apply_play(state, play) do
