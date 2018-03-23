@@ -101,7 +101,7 @@ defmodule Wordza.Autoplayer do
   end
 
   # real time, play a whole game
-  def handle_call({:play_game, _}, from, %{done: true} = state) do
+  def handle_call({:play_game, _}, _from, %{done: true} = state) do
     game = Wordza.Game.get(state.game_pid, :full)
     {:reply, {:done, game}, state}
   end
@@ -146,7 +146,7 @@ defmodule Wordza.Autoplayer do
     {:done, game}
   end
   defp real_play_next(state, %Wordza.GameInstance{} = game) do
-    Logger.info "real_play_next #{inspect(game.name)}"
+    # Logger.info "real_play_next #{inspect(game.name)}"
     player_key = (game.turn == 2) && :player_2 || :player_1
     # TODO split this out so it could work for either player's module
     case state.module_player2.make_play(player_key, game) do
