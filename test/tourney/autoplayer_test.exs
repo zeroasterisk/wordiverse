@@ -91,7 +91,7 @@ defmodule AutoplayedTest do
         {:ok, auto_player_pid} = Wordza.Autoplayer.start_link(game_pid, Wordza.BotAlec, Wordza.BotAlec)
         {:done, game} = Wordza.Autoplayer.play_game(auto_player_pid)
         assert game.turn == :game_over
-        assert game.plays |> Enum.count() > 4
+        assert game.plays |> Enum.count() >= 4
         assert game.tiles_in_pile == []
         assert game.player_1.score > 14
         assert game.player_2.score > 14

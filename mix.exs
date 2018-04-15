@@ -16,8 +16,10 @@ defmodule Wordza.Mixfile do
     [
       extra_applications: [
         :logger,
-        :timex
+        :timex,
+        :httpoison,
       ],
+      # applications: [:httpoison],
       mod: {Wordza.Application, [
       ]}
     ]
@@ -31,6 +33,8 @@ defmodule Wordza.Mixfile do
       {:comb, github: "tallakt/comb"},
       {:gproc, "~> 0.5.0"},
       {:timex, "~> 3.1"},
+      {:httpoison, "~> 1.0"},
+      {:poison, "~> 3.1"},
     ]
   end
 end
