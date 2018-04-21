@@ -30,6 +30,13 @@ defmodule Wordza.TourneyScheduleWorker do
   def start_link(%{} = conf) do
     conf |> Wordza.TourneyScheduleConfig.create() |> start_link()
   end
+  def start_link(:basic_test_small) do
+    %{
+      name: :basic_test_small,
+      number_of_games: 10,
+      number_in_parallel: 2,
+    } |> Wordza.TourneyScheduleConfig.create() |> start_link()
+  end
 
   @doc """
   Get the state of the current process

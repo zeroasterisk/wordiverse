@@ -20,7 +20,8 @@ defmodule Wordza.WordfeudMap do
     p1_id = p1 |> Map.get("id")
     p2 = players |> List.last()
     p2_id = p2 |> Map.get("id")
-    game = GameInstance.create(:wordfeud, p1_id, p2_id, name)
+    game = :wordfeud
+           |> GameInstance.create(p1_id, p2_id, name)
            |> assign_board(wf_game)
            |> assign_player_rack(:player_1, p1)
            |> assign_player_rack(:player_2, p2)
@@ -30,13 +31,14 @@ defmodule Wordza.WordfeudMap do
 
   @doc """
   Assign the tiles on the board, to the game
+
+  TODO determine tiles-on-board
+       take those from the tiles_in_pile and put onto the board
   """
   def assign_board(
     %{tiles_in_pile: tiles_in_pile} = game,
     %{"tiles" => wf_tiles_on_board} = wf_game
   ) do
-    # TODO determine tiles-on-board
-    #   take those from the tiles_in_pile and put onto the board
     game
   end
 

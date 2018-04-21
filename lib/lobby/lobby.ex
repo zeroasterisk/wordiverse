@@ -112,15 +112,6 @@ defmodule Wordza.Lobby do
     {:reply, {:ok, get_pid(pid_or_name, state)}, state}
   end
 
-
-  def handle_info({:DOWN, _, :process, pid, exit_code}, from, state) do
-    # When a monitored process dies, we will receive a `:DOWN` message
-    # that we can use to remove the dead pid from our registry
-    Logger.info fn() -> "alerted on the end of a Game #{inspect(pid)} as #{inspect(exit_code)}" end
-    # TODO can we capture the state of the game somewhere?
-    {:noreply, handle_call({:remove_game, pid}, from, state)}
-  end
-
   # helpers to get name or pid from state
   def get_pid(pid_or_name, state) when is_pid(pid_or_name), do: pid_or_name
   def get_pid(pid_or_name, state) when is_bitstring(pid_or_name) do

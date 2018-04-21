@@ -132,6 +132,10 @@ defmodule Wordza.BotBits do
 
   If "?" in letters, sub with each letter of alphabet and join results
 
+  TODO what if there are multiple "?"
+       IDEA get a normal list of all words without the "?"
+       and for each "?" add every possible "next" letter to every word
+
   ## Examples
 
       iex> {:ok, _pid} = Wordza.Dictionary.start_link(:mock)
@@ -153,9 +157,6 @@ defmodule Wordza.BotBits do
         |> Enum.uniq()
         |> Enum.sort()
       true ->
-        # TODO what if there are multiple "?"
-        #  IDEA get a normal list of all words without the "?"
-        #       and for each "?" add every possible "next" letter to every word
         words = Wordza.Dictionary.get_all_word_starts(type, letters)
         letters
         |> Enum.filter(fn(l) -> l == "?" end)

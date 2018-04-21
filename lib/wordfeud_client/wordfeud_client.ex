@@ -37,7 +37,7 @@ defmodule Wordza.WordfeudClient do
 
 
   def getHashedPassword(password) when is_bitstring(password) do
-    :crypto.hash(:sha, password <> "JarJarBinks9") |> Base.encode16 |> String.downcase
+    :sha |> :crypto.hash(password <> "JarJarBinks9") |> Base.encode16 |> String.downcase
   end
 
   def process_request_headers(headers) do

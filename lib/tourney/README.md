@@ -7,14 +7,15 @@ Tourney in it's current implementation is focused on "autoplay-between-bots"
 ## Overview
 
 * Application
- * TourneySchedulerSupervisor
-  * TourneySchedulerWorker
-   * (listens for triggers, configures needed tourney)
-   * For each needed game: (Swarm.register to distribute)
-    * TourneyGameSupervisor
-      * TourneyGameWorker
-       * TourneyAutoplayer
-        * Game
+ * API -> Tourney
+  * TourneySchedulerSupervisor
+   * TourneySchedulerWorker
+    * (listens for triggers, configures needed tourney)
+    * For each needed game: (Swarm.register to distribute)
+     * TourneyGameSupervisor
+       * TourneyGameWorker
+        * TourneyAutoplayer
+         * Game
 
 ## What the what?
 
@@ -23,11 +24,12 @@ That looks way overly complex... especially if you're coming from a different la
 In many other scripting languages it might look like this:
 
 * Application
- * TourneyScheduler
-   * (listens for triggers, configures needed tourney)
-   * For each needed game:
-    * TourneyAutoplayer
-     * Game
+ * API -> Tourney
+  * TourneyScheduler
+    * (listens for triggers, configures needed tourney)
+    * For each needed game:
+     * TourneyAutoplayer
+      * Game
 
 Why all the extra cruft?
 

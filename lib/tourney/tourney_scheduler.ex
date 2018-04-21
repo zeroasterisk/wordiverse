@@ -47,7 +47,7 @@ defmodule Wordza.TourneyScheduler do
     state
   end
   def next_spawn_games(%Wordza.TourneyScheduleConfig{} = state, number_to_start) do
-    next_spawn_game(state) |> next_spawn_games(number_to_start - 1)
+    state |> next_spawn_game() |> next_spawn_games(number_to_start - 1)
   end
 
   @doc """
