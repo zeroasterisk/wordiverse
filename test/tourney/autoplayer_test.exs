@@ -99,16 +99,18 @@ defmodule AutoplayedTest do
         # IO.puts game.board |> Wordza.GameBoard.to_string()
       end)
     end
-    test "autoplayer should be able to complete 10 games in parallel", _state do
-      _game_pids = Range.new(0, 10) |> Enum.map(fn(_) ->
-        {:ok, game_pid} = Wordza.Game.start_link(:mock, :bot_lookahead_1, :bot_lookahead_2)
-        {:ok, auto_player_pid} = Wordza.Autoplayer.start_link(game_pid, Wordza.BotAlec, Wordza.BotAlec)
-        :ok = Wordza.Autoplayer.play_game_background(auto_player_pid)
-        game_pid
-      end)
-      # TODO wait until done
-      #  then check all game_pids
-      # TODO should have a better test for parallel execution
-    end
+    # MIGHT NOT NEED THIS - basically done by Tourney
+    # test "autoplayer should be able to complete 10 games in parallel", _state do
+    #   auto_player_pids = Range.new(0, 10) |> Enum.map(fn(_) ->
+    #     {:ok, game_pid} = Wordza.Game.start_link(:mock, :bot_lookahead_1, :bot_lookahead_2)
+    #     {:ok, auto_player_pid} = Wordza.Autoplayer.start_link(game_pid, Wordza.BotAlec, Wordza.BotAlec)
+    #     auto_player_pid
+    #   end)
+    #     :ok = Wordza.Autoplayer.play_game_background(auto_player_pid)
+    #     game_pid
+    #   # TODO wait until done
+    #   #  then check all game_pids
+    #   # TODO should have a better test for parallel execution
+    # end
   end
 end
