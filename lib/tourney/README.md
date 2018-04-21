@@ -11,8 +11,8 @@ Tourney in it's current implementation is focused on "autoplay-between-bots"
   * TourneySchedulerWorker
    * (listens for triggers, configures needed tourney)
    * For each needed game: (Swarm.register to distribute)
-    * TourneySupervisor
-      * TourneyWorker
+    * TourneyGameSupervisor
+      * TourneyGameWorker
        * TourneyAutoplayer
         * Game
 

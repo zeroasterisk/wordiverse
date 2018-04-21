@@ -1,4 +1,4 @@
-defmodule Wordza.TourneySupervisor do
+defmodule Wordza.TourneyGameSupervisor do
   @moduledoc """
   This is the supervisor for the tourney processes
   """
@@ -10,7 +10,7 @@ defmodule Wordza.TourneySupervisor do
 
   def init(_) do
     children = [
-      worker(Wordza.TourneyWorker, [], restart: :temporary)
+      worker(Wordza.TourneyGameWorker, [], restart: :temporary)
     ]
     supervise(children, strategy: :simple_one_for_one)
   end

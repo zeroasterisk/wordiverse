@@ -1,6 +1,6 @@
 defmodule Wordza.TourneyAutoplayer do
   @moduledoc """
-  This is the "Autoplayer" part of the TourneyWorker
+  This is the "Autoplayer" part of the TourneyGameWorker
 
   No GenServer, just simple passthrough functions
   """
@@ -9,13 +9,13 @@ defmodule Wordza.TourneyAutoplayer do
   @doc """
   Take as many turns as needed until the game is complete
   """
-  def complete(%Wordza.TourneyConfig{done: true} = state) do
+  def complete(%Wordza.TourneyGameConfig{done: true} = state) do
     {:ok, state}
   end
-  def complete(%Wordza.TourneyConfig{} = state) do
+  def complete(%Wordza.TourneyGameConfig{} = state) do
     state |> next() |> complete()
   end
-  def complete({:ok, %Wordza.TourneyConfig{} = state}) do
+  def complete({:ok, %Wordza.TourneyGameConfig{} = state}) do
     state |> complete()
   end
 
@@ -23,11 +23,11 @@ defmodule Wordza.TourneyAutoplayer do
   Take the next turn in a game and return state
   or return state with done=true if game is over
   """
-  def next(%Wordza.TourneyConfig{done: true, game_pid: game_pid} = state) do
+  def next(%Wordza.TourneyGameConfig{done: true, game_pid: game_pid} = state) do
     # Logger.warn "TourneyAutoplayer.next should not have fired, already done, Game##{inspect(game_pid)}"
     {:ok, state}
   end
-  def next(%Wordza.TourneyConfig{game_pid: game_pid} = state) do
+  def next(%Wordza.TourneyGameConfig{game_pid: game_pid} = state) do
     game = Wordza.Game.get(game_pid, :full)
     play = state |> next_game_play(game)
     case play do
@@ -40,14 +40,14 @@ defmodule Wordza.TourneyAutoplayer do
   This is the actual handler of the next turn, based on game state
   """
   defp next_game_play(
-    %Wordza.TourneyConfig{game_pid: game_pid} = state,
+    %Wordza.TourneyGameConfig{game_pid: game_pid} = state,
     %Wordza.GameInstance{turn: :game_over} = game
   ) do
     # Logger.info "TourneyAutoplayer.next, Game##{inspect(game_pid)} (ENDED)"
     nil
   end
   defp next_game_play(
-    %Wordza.TourneyConfig{game_pid: game_pid} = state,
+    %Wordza.TourneyGameConfig{game_pid: game_pid} = state,
     %Wordza.GameInstance{
       turn: turn,
       plays: plays,
@@ -74,6 +74,6 @@ defmodule Wordza.TourneyAutoplayer do
   defp next_get_player_key(1 = _turn), do: :player_1
   defp next_get_player_key(2 = _turn), do: :player_2
 
-  defp next_get_bot(1 = _turn, %Wordza.TourneyConfig{player_1_module: bot} = _state), do: bot
-  defp next_get_bot(2 = _turn, %Wordza.TourneyConfig{player_2_module: bot} = _state), do: bot
+  defp next_get_bot(1 = _turn, %Wordza.TourneyGameConfig{player_1_module: bot} = _state), do: bot
+  defp next_get_bot(2 = _turn, %Wordza.TourneyGameConfig{player_2_module: bot} = _state), do: bot
 end

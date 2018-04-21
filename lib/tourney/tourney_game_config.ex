@@ -1,4 +1,4 @@
-defmodule Wordza.TourneyConfig do
+defmodule Wordza.TourneyGameConfig do
   @moduledoc """
   This is the config for a single Tourney Game
   """
@@ -12,7 +12,7 @@ defmodule Wordza.TourneyConfig do
     done: false,
   ]
   def create(type) do
-    %Wordza.TourneyConfig{
+    %Wordza.TourneyGameConfig{
       type: type,
     }
   end

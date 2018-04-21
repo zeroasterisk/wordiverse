@@ -6,7 +6,7 @@ defmodule TourneyAutoplayerTest do
   describe "mock board played on" do
     setup do
       Wordza.Dictionary.start_link(:mock)
-      conf = Wordza.TourneyConfig.create(:mock)
+      conf = Wordza.TourneyGameConfig.create(:mock)
       {:ok, game_pid} = Wordza.Game.start_link(conf.type, conf.player_1_id, conf.player_2_id)
       conf = Map.merge(conf, %{game_pid: game_pid})
       {:ok, conf: conf, game_pid: game_pid}

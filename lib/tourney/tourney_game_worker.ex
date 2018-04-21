@@ -1,6 +1,6 @@
-defmodule Wordza.TourneyWorker do
+defmodule Wordza.TourneyGameWorker do
   @moduledoc """
-  Auto-Play a Game - this is a Worker for the TourneySupervisor
+  Auto-Play a Game - this is a Worker for the TourneyGameSupervisor
   (called by swarm)
   - start a game
   - run each move
@@ -8,7 +8,6 @@ defmodule Wordza.TourneyWorker do
   - stop the game
   - then end gracefully
   """
-  @loop_delay 1
   require Logger
   use GenServer
 
@@ -17,7 +16,7 @@ defmodule Wordza.TourneyWorker do
   @doc """
   Start and run a game until complete, then return
   """
-  def play_game(%Wordza.TourneyConfig{} = conf) do
+  def play_game(%Wordza.TourneyGameConfig{} = conf) do
     {:ok, pid} = start_link(conf)
     conf = pid |> complete()
     pid |> done()
@@ -28,7 +27,7 @@ defmodule Wordza.TourneyWorker do
   @doc """
   Easy access to start up the server
   """
-  def start_link(%Wordza.TourneyConfig{} = conf) do
+  def start_link(%Wordza.TourneyGameConfig{} = conf) do
     GenServer.start_link(
       __MODULE__,
       conf,
@@ -38,7 +37,7 @@ defmodule Wordza.TourneyWorker do
     )
   end
   def start_link(%{} = conf) do
-    conf |> Wordza.TourneyConfig.create() |> start_link()
+    conf |> Wordza.TourneyGameConfig.create() |> start_link()
   end
 
   @doc """
@@ -57,17 +56,15 @@ defmodule Wordza.TourneyWorker do
   def complete(pid), do: GenServer.call(pid, {:complete})
 
   @doc """
-  Stop the TourneyWorker tprocess with a :normal done message
+  Stop the TourneyGameWorker tprocess with a :normal done message
   terminate() will Stop the Game process with a :normal done message
   """
   def done(pid), do: GenServer.stop(pid, :normal)
 
   ### Server API
 
-  def init(%Wordza.TourneyConfig{
+  def init(%Wordza.TourneyGameConfig{
     type: type,
-    player_1_module: player_1_module,
-    player_2_module: player_2_module,
     player_1_id: player_1_id,
     player_2_id: player_2_id,
   } = conf) do
@@ -78,13 +75,6 @@ defmodule Wordza.TourneyWorker do
     # rely on :timeout to schedule "next"
     # return state
     {:ok, state}
-  end
-
-  def handle_info(:timeout, state) do
-    Logger.info "TourneyWorker.handle_info :timeout #{inspect(state)}"
-    Process.send_after(self(), :timeout, @delay)
-    {:ok, state} = Wordza.TourneyAutoplayer.next(state)
-    {:noreply, state}
   end
 
   def handle_call({:get}, _from, state) do
@@ -116,10 +106,18 @@ defmodule Wordza.TourneyWorker do
     {:noreply, state}
   end
 
-  def handle_info(:timeout, {delay, count}) do
-    Process.send_after(self(), :timeout, delay)
-    {:noreply, {delay, count + 1}}
+  def handle_info(:timeout, state) do
+    Logger.info "TourneyGameWorker.handle_info :timeout #{inspect(state)}"
+    Process.send_after(self(), :timeout, 10)
+    {:ok, state} = Wordza.TourneyAutoplayer.next(state)
+    {:noreply, state}
   end
+
+  # def handle_info(:timeout, {delay, count}) do
+  #   Process.send_after(self(), :timeout, delay)
+  #   {:noreply, {delay, count + 1}}
+  # end
+
   # this message is sent when this process should die
   # because it's being moved, use this as an opportunity
   # to clean up
