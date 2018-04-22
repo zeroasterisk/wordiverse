@@ -40,5 +40,42 @@ defmodule TourneyScheduleWorkerTest do
       assert conf.number_running == 2
       assert Enum.count(conf.running_game_ids) == 2
     end
+    # test "expose next() x3", state do
+    #   conf = state[:conf]
+    #   {:ok, tsw_pid} = Wordza.TourneyScheduleWorker.start_link(conf)
+    #   conf = Wordza.TourneyScheduleWorker.next(tsw_pid)
+    #   assert conf.number_in_parallel == 2
+    #   assert conf.number_of_games == 10
+    #   assert conf.number_left == 10
+    #   assert conf.number_completed == 0
+    #   assert conf.number_running == 2
+    #   assert Enum.count(conf.running_game_ids) == 2
+    #   conf = Wordza.TourneyScheduleWorker.next(tsw_pid)
+    #   assert conf.number_in_parallel == 2
+    #   assert conf.number_of_games == 10
+    #   assert conf.number_left == 10
+    #   assert conf.number_completed == 0
+    #   assert conf.number_running == 4
+    #   # assert Enum.count(conf.running_game_ids) == 2
+    #   conf = Wordza.TourneyScheduleWorker.next(tsw_pid)
+    #   assert conf.number_in_parallel == 2
+    #   assert conf.number_of_games == 10
+    #   assert conf.number_left == 10
+    #   assert conf.number_completed == 0
+    #   assert conf.number_running == 4
+    #   assert Enum.count(conf.running_game_ids) == 2
+    # end
+    # test "expose complete()", state do
+    #   conf = state[:conf]
+    #   {:ok, tsw_pid} = Wordza.TourneyScheduleWorker.start_link(conf)
+    #   conf = Wordza.TourneyScheduleWorker.complete(tsw_pid)
+    #   Process.sleep(200)
+    #   assert conf.number_in_parallel == 2
+    #   assert conf.number_of_games == 10
+    #   assert conf.number_left == 10
+    #   assert conf.number_completed == 0
+    #   assert conf.number_running == 2
+    #   assert Enum.count(conf.running_game_ids) == 2
+    # end
   end
 end

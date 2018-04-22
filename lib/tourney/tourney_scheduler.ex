@@ -2,6 +2,12 @@ defmodule Wordza.TourneyScheduler do
   @moduledoc """
   Manage a Tournement - scheduling out several games
 
+  This is bit like a ghetto pooly/poolboy,
+  But it functions as a trickler/nibbler instead
+  with @number_in_parallel slots available
+  and it should run until all @number_of_games are complete
+  while looping, if a slot is available, we start a new game in it
+
   No GenServer, just simple passthrough functions
   """
   require Logger
@@ -39,9 +45,9 @@ defmodule Wordza.TourneyScheduler do
     number_completed: completed,
     number_in_parallel: number_in_parallel,
   } = state) do
-    # we still need to start: total - completed - running
+    number_of_slots = number_in_parallel - running
     number_to_start = total - completed - running
-    min(number_in_parallel, number_to_start)
+    min(number_of_slots, number_to_start)
   end
 
   @doc """
@@ -77,7 +83,16 @@ defmodule Wordza.TourneyScheduler do
       player_2_module: player_2_module,
       tourney_scheduler_pid: tourney_scheduler_pid,
     }
+    # Currently this is just me manually starting a TourneyGameWorker
+    # ideally this will change to spawn.register (I think)
+    # TODO truthfully, we could offload the messaging to the TourneyGameWorker
+    #   the worker registers itself with the Scheduler
+    #   the worker completes the game (async)
+    #   the worker de-registers itself with the Scheduler
+    #   (this is even more like a pool)
     {:ok, conf} = Wordza.TourneyGameWorker.play_game_bg(conf)
+    # consider Process.monitor (from the Supervisor for the Worker)?
+    # consider Process.monitor (from the Worker for the Game)?
     game_pid = conf.game_pid
     # Logger.info "  + TourneyScheduler started game #{inspect(game_pid)}"
     state |> Map.merge(%{
@@ -86,6 +101,9 @@ defmodule Wordza.TourneyScheduler do
   end
 
   def tourney_done(%Wordza.TourneyScheduleConfig{number_completed: number_completed} = state) do
+    # TODO work on getting the game_pid out of the running_game_ids
+    #   we have to be able to monitor the status of each game
+    #   ideally by having the tourney_worker "callback" on exit (like it is)
     state |> Map.merge(%{
       number_completed: number_completed + 1,
       # running_game_ids: running_game_ids |> Enum.filter(fn(p) -> p == game_pid end)

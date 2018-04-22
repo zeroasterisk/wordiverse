@@ -40,7 +40,7 @@ defmodule Wordza.TourneyScheduleWorker do
                    number_in_parallel: 2,
                  })
                  |> start_link()
-    pid |> complete()
+    # pid |> complete()
     {:ok, pid}
   end
 
