@@ -12,15 +12,19 @@ defmodule Wordza.TourneyScheduler do
   or return state with done=true if game is over
   """
   def next(%Wordza.TourneyScheduleConfig{done: true} = state) do
+    # Logger.info "TourneyScheduler done=true"
   end
   def next(%Wordza.TourneyScheduleConfig{number_left: 0} = state) do
+    # Logger.info "TourneyScheduler number_left=0"
   end
   def next(%Wordza.TourneyScheduleConfig{number_of_games: 0} = state) do
+    Logger.info "TourneyScheduler number_of_games=0"
   end
   def next(%Wordza.TourneyScheduleConfig{
     number_of_games: number_of_games,
     number_in_parallel: number_in_parallel,
   } = state) do
+    # Logger.info "TourneyScheduler number_of_games=#{number_of_games} number_in_parallel=#{number_in_parallel}"
     number_to_start = next_get_spawn_count(state)
     state = next_spawn_games(state, number_to_start)
     {:ok, state}
@@ -63,6 +67,7 @@ defmodule Wordza.TourneyScheduler do
     player_1_module: player_1_module,
     player_2_module: player_2_module,
     running_game_ids: running_game_ids,
+    tourney_scheduler_pid: tourney_scheduler_pid,
   } = state) do
     conf = %Wordza.TourneyGameConfig{
       type: type,
@@ -70,13 +75,22 @@ defmodule Wordza.TourneyScheduler do
       player_2_id: player_2_id,
       player_1_module: player_1_module,
       player_2_module: player_2_module,
+      tourney_scheduler_pid: tourney_scheduler_pid,
     }
-    {:ok, conf} = Wordza.TourneyGameWorker.play_game(conf)
+    {:ok, conf} = Wordza.TourneyGameWorker.play_game_bg(conf)
     game_pid = conf.game_pid
-    Logger.info fn() -> "  + TourneyScheduler started game #{inspect(game_pid)}" end
+    # Logger.info "  + TourneyScheduler started game #{inspect(game_pid)}"
     state |> Map.merge(%{
       running_game_ids: [game_pid | running_game_ids]
     }) |> Wordza.TourneyScheduleConfig.calc()
+  end
+
+  def tourney_done(%Wordza.TourneyScheduleConfig{number_completed: number_completed} = state) do
+    state |> Map.merge(%{
+      number_completed: number_completed + 1,
+      # running_game_ids: running_game_ids |> Enum.filter(fn(p) -> p == game_pid end)
+    })
+    {:ok, state}
   end
 
 end

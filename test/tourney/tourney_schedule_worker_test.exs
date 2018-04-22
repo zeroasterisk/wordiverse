@@ -11,9 +11,10 @@ defmodule TourneyScheduleWorkerTest do
     end
     test "start should create game, but not play it", state do
       conf = state[:conf]
-      {:ok, tw_pid} = Wordza.TourneyScheduleWorker.start_link(conf)
-      conf = Wordza.TourneyScheduleWorker.get(tw_pid)
-      assert conf == %Wordza.TourneyScheduleConfig{
+      {:ok, tsw_pid} = Wordza.TourneyScheduleWorker.start_link(conf)
+      conf = Wordza.TourneyScheduleWorker.get(tsw_pid)
+      conf_no_pid = Map.merge(conf, %{tourney_scheduler_pid: nil})
+      assert conf_no_pid == %Wordza.TourneyScheduleConfig{
         type: :mock,
         player_1_id: :p1,
         player_2_id: :p2,
@@ -30,8 +31,8 @@ defmodule TourneyScheduleWorkerTest do
     end
     test "expose next()", state do
       conf = state[:conf]
-      {:ok, tw_pid} = Wordza.TourneyScheduleWorker.start_link(conf)
-      conf = Wordza.TourneyScheduleWorker.next(tw_pid)
+      {:ok, tsw_pid} = Wordza.TourneyScheduleWorker.start_link(conf)
+      conf = Wordza.TourneyScheduleWorker.next(tsw_pid)
       assert conf.number_in_parallel == 2
       assert conf.number_of_games == 10
       assert conf.number_left == 10

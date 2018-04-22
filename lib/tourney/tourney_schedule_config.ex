@@ -13,6 +13,7 @@ defmodule Wordza.TourneyScheduleConfig do
     player_1_id: :p1,
     player_2_id: :p2,
     # config for Tourney Scheduler
+    tourney_scheduler_pid: nil,
     id: nil,
     name: nil,
     number_of_games: 10,

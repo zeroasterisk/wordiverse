@@ -117,10 +117,19 @@ defmodule Wordza.GameInstance do
   @doc """
   Build a unique name for each game
   """
-  def build_game_name(type) do
+  def build_game_name(type) when is_atom(type) do
     [
       "game",
       Atom.to_string(type),
+      DateTime.utc_now() |> DateTime.to_unix(),
+      :rand.uniform(9999),
+      :rand.uniform(9999),
+    ] |> Enum.join("_")
+  end
+  def build_game_name(type) do
+    [
+      "game",
+      "UNKNOWN_TYPE",
       DateTime.utc_now() |> DateTime.to_unix(),
       :rand.uniform(9999),
       :rand.uniform(9999),

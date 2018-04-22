@@ -10,6 +10,8 @@ defmodule Wordza.TourneyGameConfig do
     player_2_id: :p2,
     game_pid: nil,
     done: false,
+    tourney_worker_pid: nil,
+    tourney_scheduler_pid: nil,
   ]
   def create(type) do
     %Wordza.TourneyGameConfig{
