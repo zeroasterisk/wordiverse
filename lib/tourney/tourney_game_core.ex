@@ -1,4 +1,4 @@
-defmodule Wordza.TourneyAutoplayer do
+defmodule Wordza.TourneyGameCore do
   @moduledoc """
   This is the "Autoplayer" part of the TourneyGameWorker
 
@@ -24,7 +24,7 @@ defmodule Wordza.TourneyAutoplayer do
   or return state with done=true if game is over
   """
   def next(%Wordza.TourneyGameConfig{done: true, game_pid: game_pid} = state) do
-    # Logger.warn "TourneyAutoplayer.next should not have fired, already done, Game##{inspect(game_pid)}"
+    # Logger.warn "TourneyGameCore.next should not have fired, already done, Game##{inspect(game_pid)}"
     {:ok, state}
   end
   def next(%Wordza.TourneyGameConfig{game_pid: game_pid} = state) do
@@ -43,7 +43,7 @@ defmodule Wordza.TourneyAutoplayer do
     %Wordza.TourneyGameConfig{game_pid: game_pid} = state,
     %Wordza.GameInstance{turn: :game_over} = game
   ) do
-    # Logger.info "TourneyAutoplayer.next, Game##{inspect(game_pid)} (ENDED)"
+    # Logger.info "TourneyGameCore.next, Game##{inspect(game_pid)} (ENDED)"
     nil
   end
   defp next_game_play(
@@ -54,7 +54,7 @@ defmodule Wordza.TourneyAutoplayer do
     } = game
   ) do
     turn_count = Enum.count(plays)
-    # Logger.info "TourneyAutoplayer.next, Game##{inspect(game_pid)} (turn: #{turn_count}, next: #{turn})"
+    # Logger.info "TourneyGameCore.next, Game##{inspect(game_pid)} (turn: #{turn_count}, next: #{turn})"
 
     player_key = next_get_player_key(turn)
     bot = next_get_bot(turn, state)

@@ -1,7 +1,7 @@
-defmodule TourneyAutoplayerTest do
+defmodule TourneyGameCoreTest do
 
   use ExUnit.Case
-  doctest Wordza.TourneyAutoplayer
+  doctest Wordza.TourneyGameCore
 
   describe "mock board played on" do
     setup do
@@ -24,7 +24,7 @@ defmodule TourneyAutoplayerTest do
         [nil, nil, nil, nil, nil],
         [nil, nil, nil, nil, nil],
       ]
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
       game = Wordza.Game.get(game_pid, :full)
       assert game.turn == 2
       assert game.board |> Wordza.GameBoard.to_list == [
@@ -34,7 +34,7 @@ defmodule TourneyAutoplayerTest do
         [nil, nil, "A", nil, nil],
         [nil, nil, "N", nil, nil],
       ]
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
       game = Wordza.Game.get(game_pid, :full)
       assert game.board |> Wordza.GameBoard.to_list == [
         [nil, nil, nil, nil, nil],
@@ -45,25 +45,25 @@ defmodule TourneyAutoplayerTest do
       ]
       # after this, we don't know what's in the player hands anymore
       # because of a bit of random distrobution
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
       game = Wordza.Game.get(game_pid, :full)
       assert game.turn == 2
       assert game.plays |> Enum.count() == 3
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
       game = Wordza.Game.get(game_pid, :full)
       assert game.turn == 1
       assert game.plays |> Enum.count() == 4
       # TO_DO could do a better job and make the game know it's over here
       # we should have run out of plays here (depending on distrobution)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
-      {:ok, conf} = Wordza.TourneyAutoplayer.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.next(conf)
       assert conf.done == true
       game = Wordza.Game.get(game_pid, :full)
       assert game.turn == :game_over
@@ -88,7 +88,7 @@ defmodule TourneyAutoplayerTest do
         [nil, nil, nil, nil, nil],
         [nil, nil, nil, nil, nil],
       ]
-      {:ok, conf} = Wordza.TourneyAutoplayer.complete(conf)
+      {:ok, conf} = Wordza.TourneyGameCore.complete(conf)
       assert conf.done == true
       game = Wordza.Game.get(game_pid, :full)
       assert game.turn == :game_over

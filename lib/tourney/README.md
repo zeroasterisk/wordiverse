@@ -14,8 +14,7 @@ Tourney in it's current implementation is focused on "autoplay-between-bots"
     * For each needed game: (Swarm.register to distribute)
      * TourneyGameSupervisor
        * TourneyGameWorker
-        * TourneyAutoplayer
-         * Game
+        * Game
 
 ## What the what?
 
@@ -28,7 +27,7 @@ In many other scripting languages it might look like this:
   * TourneyScheduler
     * (listens for triggers, configures needed tourney)
     * For each needed game:
-     * TourneyAutoplayer
+     * TourneyGameWorker
       * Game
 
 Why all the extra cruft?

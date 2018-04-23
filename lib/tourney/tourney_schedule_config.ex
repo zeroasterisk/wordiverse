@@ -23,7 +23,8 @@ defmodule Wordza.TourneyScheduleConfig do
     number_running: 0,
     number_completed: 0,
     number_left: 0,
-    running_game_ids: [],
+    running_tourney_pids: [],
+    tourney_scheduler_loop: true,
   ]
   def create(type) do
     %Wordza.TourneyScheduleConfig{
@@ -41,10 +42,10 @@ defmodule Wordza.TourneyScheduleConfig do
     %Wordza.TourneyScheduleConfig{
       number_of_games: total,
       number_completed: done,
-      running_game_ids: running_game_ids,
+      running_tourney_pids: running_tourney_pids,
     } = conf) do
       Map.merge(conf, %{
-        number_running: Enum.count(running_game_ids),
+        number_running: Enum.count(running_tourney_pids),
         number_left: (total - done),
         done: (total - done == true),
       })

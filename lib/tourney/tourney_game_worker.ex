@@ -20,7 +20,6 @@ defmodule Wordza.TourneyGameWorker do
   def play_game(%Wordza.TourneyGameConfig{} = conf) do
     {:ok, pid} = start_link(conf)
     conf = pid |> complete_game()
-    pid |> shutdown()
     pid |> stop()
     {:ok, conf}
   end
@@ -71,18 +70,6 @@ defmodule Wordza.TourneyGameWorker do
   def complete_game_bg(pid), do: GenServer.cast(pid, {:complete_game_bg})
 
   @doc """
-  Shutdown this TourneyGameWorker process
-  """
-  def shutdown(pid) do
-    case Process.alive?(pid) do
-      true -> GenServer.call(pid, {:shutdown})
-      false ->
-        Logger.warn "TourneyGameWorker.shutdown abort - already dead"
-        :dead
-    end
-  end
-
-  @doc """
   Stop this TourneyGameWorker process
   """
   def stop(:dead), do: :dead
@@ -103,12 +90,12 @@ defmodule Wordza.TourneyGameWorker do
     player_2_id: player_2_id,
   } = conf) do
     # Logger.info "TourneyGameWorker.init starting game: #{inspect(type)}, #{inspect(player_1_id)}, #{inspect(player_2_id)}"
-
-    # start the game
+    # start the game - linked to "monitor" it's messages here
     {:ok, game_pid} = Wordza.Game.start_link(type, player_1_id, player_2_id)
     # update state with game_pid
     state = Map.merge(conf, %{game_pid: game_pid, tourney_worker_pid: self()})
-    # rely on :timeout to schedule "next"
+
+    # rely on human intervention to trigger :next or complete synchronously
     # return state
     {:ok, state}
   end
@@ -117,69 +104,52 @@ defmodule Wordza.TourneyGameWorker do
     {:reply, state, state}
   end
   def handle_call({:next}, _from, state) do
-    {:ok, state} = Wordza.TourneyAutoplayer.next(state)
+    {:ok, state} = Wordza.TourneyGameCore.next(state)
     {:reply, state, state}
   end
   def handle_call({:complete_game}, _from, state) do
-    {:ok, state} = Wordza.TourneyAutoplayer.complete(state)
-    # TODO handle things after game has completed
+    {:ok, state} = Wordza.TourneyGameCore.complete(state)
     {:reply, state, state}
+  end
+
+  # background process until complete
+  def handle_cast({:complete_game_bg}, state) do
+    Process.send_after(self(), :loop_until_complete, @loop_delay)
+    {:noreply, state}
+  end
+
+  # loop stopped (pause)
+  def handle_info(:loop_until_complete, %{tourney_scheduler_loop: false} = state) do
+    {:noreply, state}
+  end
+  # loop until complete
+  def handle_info(:loop_until_complete, state) do
+    state = run_next_step(state)
+    Process.send_after(self(), :loop_until_complete, @loop_delay)
+    {:noreply, state}
   end
 
   ### Server API for SWARM
   # see https://github.com/bitwalker/swarm
 
-  def handle_call({:swarm, :begin_handoff}, _from, {delay, count}) do
-    {:reply, {:resume, {delay, count}}, {delay, count}}
-  end
-  def handle_call(:ping, _from, state) do
-    {:reply, {:pong, self()}, state}
-  end
-  def handle_call({:shutdown}, _from, state) do
-    state |> oncomplete_tourney_scheduler_pid()
-    {:reply, state, state}
-  end
-
-  def handle_cast({:swarm, :end_handoff, {delay, count}}, {_, _}) do
-    {:noreply, {delay, count}}
-  end
-
-  # background process until complete
-  def handle_cast({:complete_game_bg}, state) do
-    Process.send_after(self(), :loop_until_complete, @loop_delay)
-    {:noreply, state}
-  end
-
-  # def handle_cast(_, state) do
-  #   Logger.warn "janky cast"
+  # def handle_call({:swarm, :begin_handoff}, _from, {delay, count}) do
+  #   {:reply, {:resume, {delay, count}}, {delay, count}}
+  # end
+  # def handle_call(:ping, _from, state) do
+  #   {:reply, {:pong, self()}, state}
+  # end
+  #
+  # def handle_cast({:swarm, :end_handoff, {delay, count}}, {_, _}) do
+  #   {:noreply, {delay, count}}
+  # end
+  #
+  #
+  # def handle_info(:timeout, state) do
+  #   Logger.warn "TourneyGameWorker.handle_info :timeout #{inspect(state)}"
+  #   Process.send_after(self(), :timeout, 10)
+  #   {:ok, state} = Wordza.TourneyGameCore.next(state)
   #   {:noreply, state}
   # end
-
-  # background process until complete
-  def handle_cast({:complete_game_bg}, state) do
-    Process.send_after(self(), :loop_until_complete, @loop_delay)
-    {:noreply, state}
-  end
-  # loop until complete
-  def handle_info(:loop_until_complete, %{done: true} = state) do
-    shutdown(self())
-    stop(self())
-    {:noreply, state}
-  end
-  def handle_info(:loop_until_complete, state) do
-    # NOTE: we could just use complete here
-    #   but want to send more messages and see how bad it is
-    {:ok, state} = Wordza.TourneyAutoplayer.next(state)
-    Process.send_after(self(), :loop_until_complete, @loop_delay)
-    {:noreply, state}
-  end
-
-  def handle_info(:timeout, state) do
-    Logger.info "TourneyGameWorker.handle_info :timeout #{inspect(state)}"
-    Process.send_after(self(), :timeout, 10)
-    {:ok, state} = Wordza.TourneyAutoplayer.next(state)
-    {:noreply, state}
-  end
 
   # def handle_info(:timeout, {delay, count}) do
   #   Process.send_after(self(), :timeout, delay)
@@ -190,34 +160,105 @@ defmodule Wordza.TourneyGameWorker do
   # because it's being moved, use this as an opportunity
   # to clean up
   def handle_info({:swarm, :die}, state) do
-    {:stop, :shutdown, state}
+    {:stop, :swarm_die, state}
   end
   def handle_info(msg, state) do
-    Logger.info "TourneyGameWorker - unknown info #{inspect(msg)}"
+    Logger.warn "TourneyGameWorker - unknown info #{inspect(msg)}"
     {:noreply, state}
   end
 
   @doc """
-  Send a notification message upon completion of a game
+  Cleanup when the Game is completed successfully
   """
-  def oncomplete_tourney_scheduler_pid(%{tourney_scheduler_pid: pid} = state) when is_pid(pid) do
-    Logger.info "TourneyGameWorker.oncomplete_tourney_scheduler_pid #{inspect(state)}"
-    case (is_pid(pid) && Process.alive?(pid)) do
-      true ->
-        Wordza.TourneyScheduleWorker.tourney_done(pid)
-        nil
-      false ->
-        Logger.warn "TourneyGameWorker.oncomplete_tourney_scheduler_pid unable to notify dead process: #{inspect(pid)}"
-    end
+  def onsuccess(state) do
+    # Logger.info "TourneyGameWorker.onsuccess done #{inspect(state)} #{inspect(self())}"
+    state
+    |> tourney_done_in_scheduler()
+    |> unregister_worker_in_scheduler(:normal)
+    |> terminate_game(:normal)
+    :ok
   end
-  def oncomplete_tourney_scheduler_pid(_state), do: nil
-
   @doc """
   Cleanup on exit - will Stop the Game process with a :normal done message
   """
   def terminate(reason, state) do
-    GenServer.stop(state.game_pid, reason) # kill Game
+    # Logger.warn "TourneyGameWorker.terminate #{inspect(reason)} #{inspect(state)} #{inspect(self())}"
+    state
+    |> unregister_worker_in_scheduler(reason)
+    |> terminate_game(reason)
     :ok
+  end
+
+
+  ######################
+  ## Internal Private ##
+  ######################
+
+
+  @doc """
+  Take the next turn in a game and return state
+  or return state with done=true if game is over
+  """
+  def run_next_step(%Wordza.TourneyGameConfig{done: true} = state) do
+    # Logger.info "TourneyGameWorker.loop(info) about to stop self"
+    onsuccess(state)
+    GenServer.stop(self())
+    state
+  end
+  def run_next_step(%Wordza.TourneyGameConfig{} = state) do
+    {:ok, state} = Wordza.TourneyGameCore.next(state)
+    state
+  end
+
+  def unregister_worker_in_scheduler(%{tourney_scheduler_pid: pid, tourney_worker_pid: self_pid} = state, reason) when is_pid(pid) do
+    case Process.alive?(pid) do
+      true ->
+        # Logger.info "TourneyGameWorker.unregister_scheduler about to call unregister_worker"
+        Wordza.TourneyScheduleWorker.unregister_worker(pid, self_pid)
+        state
+      false ->
+        Logger.warn "TourneyGameWorker.unregister_scheduler #{reason} abort - already dead"
+        state
+    end
+  end
+  def unregister_worker_in_scheduler(%{tourney_scheduler_pid: pid, type: :mock} = state, _reason) when is_nil(pid) do
+    # testing, this is fine
+    state
+  end
+  def unregister_worker_in_scheduler(%{tourney_scheduler_pid: pid} = state, _reason) when is_nil(pid) do
+    # we may allow this in the future, but for now, this seems wonky
+    Logger.warn "TourneyGameWorker.unregister_scheduler can not unregister_worker, pid is nil in #{inspect(state)}"
+    state
+  end
+  def terminate_game(%Wordza.TourneyGameConfig{game_pid: pid} = _state, reason) do
+    case Process.alive?(pid) do
+      true ->
+        # Logger.info "TourneyGameWorker.terminate_game about to stop game"
+        GenServer.stop(pid, reason)
+      false ->
+        Logger.warn "TourneyGameWorker.terminate_game abort - already dead"
+        :dead
+    end
+  end
+  def tourney_done_in_scheduler(%{tourney_scheduler_pid: pid, tourney_worker_pid: self_pid} = state) when is_pid(pid) do
+    case Process.alive?(pid) do
+      true ->
+        # Logger.info "TourneyGameWorker.tourney_done_in_scheduler about to call tourney_done"
+        Wordza.TourneyScheduleWorker.tourney_done(pid, self_pid)
+        state
+      false ->
+        Logger.warn "TourneyGameWorker.tourney_done_in_scheduler abort - already dead"
+        state
+    end
+  end
+  def tourney_done_in_scheduler(%{type: :mock} = state) do
+    # testing, this is fine
+    state
+  end
+  def tourney_done_in_scheduler(state) do
+    # we may allow this in the future, but for now, this seems wonky
+    Logger.warn "TourneyGameWorker.tourney_done_in_scheduler abort - invalid state #{inspect(state)}"
+    state
   end
 
 end
