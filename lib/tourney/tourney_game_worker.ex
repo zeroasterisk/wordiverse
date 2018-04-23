@@ -119,7 +119,7 @@ defmodule Wordza.TourneyGameWorker do
   end
 
   # loop stopped (pause)
-  def handle_info(:loop_until_complete, %{tourney_scheduler_loop: false} = state) do
+  def handle_info(:loop_until_complete, %{enable_loop: false} = state) do
     {:noreply, state}
   end
   # loop until complete
@@ -173,6 +173,7 @@ defmodule Wordza.TourneyGameWorker do
   def onsuccess(state) do
     # Logger.info "TourneyGameWorker.onsuccess done #{inspect(state)} #{inspect(self())}"
     state
+    |> tourney_done_logger()
     |> tourney_done_in_scheduler()
     |> unregister_worker_in_scheduler(:normal)
     |> terminate_game(:normal)
@@ -230,6 +231,7 @@ defmodule Wordza.TourneyGameWorker do
     Logger.warn "TourneyGameWorker.unregister_scheduler can not unregister_worker, pid is nil in #{inspect(state)}"
     state
   end
+
   def terminate_game(%Wordza.TourneyGameConfig{game_pid: pid} = _state, reason) do
     case Process.alive?(pid) do
       true ->
@@ -240,6 +242,7 @@ defmodule Wordza.TourneyGameWorker do
         :dead
     end
   end
+
   def tourney_done_in_scheduler(%{tourney_scheduler_pid: pid, tourney_worker_pid: self_pid} = state) when is_pid(pid) do
     case Process.alive?(pid) do
       true ->
@@ -258,6 +261,17 @@ defmodule Wordza.TourneyGameWorker do
   def tourney_done_in_scheduler(state) do
     # we may allow this in the future, but for now, this seems wonky
     Logger.warn "TourneyGameWorker.tourney_done_in_scheduler abort - invalid state #{inspect(state)}"
+    state
+  end
+
+  def tourney_done_logger(%Wordza.TourneyGameConfig{game_pid: pid} = state) do
+    case Process.alive?(pid) do
+      true ->
+        # Logger.info "TourneyGameWorker.tourney_done_logger about to log game"
+        Wordza.Game.get(pid, :full) |> Wordza.GameLog.write(state)
+      false ->
+        Logger.warn "TourneyGameWorker.tourney_done_logger abort - game is dead #{inspect(pid)}"
+    end
     state
   end
 

@@ -9,7 +9,7 @@ defmodule Wordza.Application do
     # List all child processes to be supervised
     children = [
       # Starts a worker by calling: Wordza.Game.Worker.start_link(arg)
-      # %{id: DictionaryMock, start: {Wordza.Dictionary, :start_link, [:mock]}},
+      %{id: DictionaryMock, start: {Wordza.Dictionary, :start_link, [:mock]}},
       # %{id: DictionaryScrabble, start: {Wordza.Dictionary, :start_link, [:scrabble]}},
       # %{id: TourneySchedulerBasic, start: {Wordza.TourneyScheduleWorker, :start_link, [:basic_test_small]}},
     ]

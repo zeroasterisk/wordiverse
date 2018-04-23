@@ -12,7 +12,7 @@ defmodule Wordza.TourneyGameConfig do
     done: false,
     tourney_worker_pid: nil,
     tourney_scheduler_pid: nil,
-    tourney_scheduler_loop: true,
+    enable_loop: true,
   ]
   def create(type) do
     %Wordza.TourneyGameConfig{

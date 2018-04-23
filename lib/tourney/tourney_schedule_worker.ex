@@ -31,13 +31,40 @@ defmodule Wordza.TourneyScheduleWorker do
   def start_link(%{} = conf) do
     conf |> Wordza.TourneyScheduleConfig.create() |> start_link()
   end
-  def start_link(:basic_test_small) do
+  def start_link(:mock_test_small) do
+    Wordza.Dictionary.start_link(:mock)
     {:ok, pid} = :mock
                  |> Wordza.TourneyScheduleConfig.create()
                  |> Map.merge(%{
                    name: :basic_test_small,
                    number_of_games: 10,
                    number_in_parallel: 2,
+                 })
+                 |> start_link()
+    # pid |> complete()
+    {:ok, pid}
+  end
+  def start_link(:scrabble_test_small) do
+    Wordza.Dictionary.start_link(:scrabble)
+    {:ok, pid} = :scrabble
+                 |> Wordza.TourneyScheduleConfig.create()
+                 |> Map.merge(%{
+                   name: :basic_test_small,
+                   number_of_games: 10,
+                   number_in_parallel: 2,
+                 })
+                 |> start_link()
+    # pid |> complete()
+    {:ok, pid}
+  end
+  def start_link(:scrabble_test_large) do
+    Wordza.Dictionary.start_link(:scrabble)
+    {:ok, pid} = :scrabble
+                 |> Wordza.TourneyScheduleConfig.create()
+                 |> Map.merge(%{
+                   name: :basic_test_small,
+                   number_of_games: 10_000,
+                   number_in_parallel: 10,
                  })
                  |> start_link()
     # pid |> complete()
@@ -105,12 +132,12 @@ defmodule Wordza.TourneyScheduleWorker do
   end
   def handle_call({:play}, _from, state) do
     # Logger.info "handle_call play from ScheduleWorker #{inspect(self())}"
-    state = state |> Map.merge(%{tourney_scheduler_loop: true})
+    state = state |> Map.merge(%{enable_loop: true})
     {:reply, state, state}
   end
   def handle_call({:pause}, _from, state) do
     # Logger.info "handle_call pause from ScheduleWorker #{inspect(self())}"
-    state = state |> Map.merge(%{tourney_scheduler_loop: false})
+    state = state |> Map.merge(%{enable_loop: false})
     {:reply, state, state}
   end
 
@@ -149,7 +176,7 @@ defmodule Wordza.TourneyScheduleWorker do
   end
 
   # loop stopped (pause)
-  def handle_info(:loop_until_complete, %{tourney_scheduler_loop: false} = state) do
+  def handle_info(:loop_until_complete, %{enable_loop: false} = state) do
     {:noreply, state}
   end
   # loop until complete
@@ -211,7 +238,7 @@ defmodule Wordza.TourneyScheduleWorker do
 
   def pause_if_done(%{number_left: 0} = state) do
     # Logger.info "TourneyScheduleWorker loop_until_complete is now done - pausing (could stop)"
-    state |> Map.merge(%{tourney_scheduler_loop: false})
+    state |> Map.merge(%{enable_loop: false})
   end
   def pause_if_done(state), do: state
 

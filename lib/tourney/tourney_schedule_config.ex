@@ -24,7 +24,7 @@ defmodule Wordza.TourneyScheduleConfig do
     number_completed: 0,
     number_left: 0,
     running_tourney_pids: [],
-    tourney_scheduler_loop: true,
+    enable_loop: true,
   ]
   def create(type) do
     %Wordza.TourneyScheduleConfig{
