@@ -18,6 +18,7 @@ defmodule Wordza.Mixfile do
         :logger,
         :timex,
         :httpoison,
+        :cachex,
       ],
       # applications: [:httpoison],
       mod: {Wordza.Application, [
@@ -35,6 +36,14 @@ defmodule Wordza.Mixfile do
       {:timex, "~> 3.1"},
       {:httpoison, "~> 1.0"},
       {:poison, "~> 3.1"},
+      {:cachex, "~> 3.0"},
+      # {:elixometer, github: "pinterest/elixometer"},
+      # {:exometer_influxdb, "0.5.7"},
+      {:elixometer, github: "pinterest/elixometer"},
+      {:exometer_influxdb, github: "travelping/exometer_influxdb"},
+      {:exometer_core, "~> 1.0", override: true},
+      {:lager, "3.0.2", override: true},
+      {:hackney, "~> 1.4.4", override: true}
     ]
   end
 end
