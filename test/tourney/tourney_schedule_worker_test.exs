@@ -149,6 +149,13 @@ defmodule TourneyScheduleWorkerTest do
       # assert Enum.count(game_conf.plays) > 0 TODO check this out
     end
 
+    @tag timeout: 400_000
+    test "PROFILE Scrabble (long runnning)" do
+      IO.puts "PROFILE Scrabble (long runnning)"
+      {:ok, pid} = Wordza.TourneyScheduleWorker.start_link :scrabble_test_small
+      Process.sleep 300_000 # 5 min
+
+    end
 
   end
 end

@@ -4,6 +4,7 @@ defmodule Wordza.Dictionary do
   We only need 1 dictionary, for all of our Games of each type
   So it is it's own GenServer
   """
+  import Cachex.Spec
   use Elixometer
   use GenServer
 
@@ -28,11 +29,36 @@ defmodule Wordza.Dictionary do
   def start_link_nice({:error, {:already_started, pid}}), do: {:ok, pid}
   def start_link_nice({:error, err}), do: {:error, err}
 
+  # helpers for caching
+  # def is_word_cacheable?(letters), do: false
+  def is_word_cacheable?(letters), do: Enum.count(letters) < 4
+
+
+
   @doc """
   Check if a word is a valid beginning of a term
   """
   @timed(key: :auto)
   def is_word_start?(pid, letters) do
+    letters = Wordza.Dictionary.Helpers.clean_letters(letters)
+    case is_word_cacheable? letters do
+      true -> cached_is_word_start?(pid, letters)
+      false -> server_is_word_start?(pid, letters)
+    end
+
+  end
+  def cached_is_word_start?(pid, letters) do
+    key = letters |> Enum.join ""
+    case Cachex.get(pid, key) do
+      {:ok, val} -> val
+      _ ->
+        val = server_is_word_start?(pid, key)
+        Cachex.put(pid, key, val)
+        val
+    end
+  end
+  @timed(key: :auto)
+  def server_is_word_start?(pid, letters) do
     GenServer.call(pid, {:is_word_start?, letters})
   end
   @timed(key: :auto)
@@ -48,7 +74,7 @@ defmodule Wordza.Dictionary do
   def init(type) do
     allowed = [:scrabble, :wordfeud, :mock]
     case Enum.member?(allowed, type) do
-      true -> {:ok, Wordza.Dictionary.Helpers.build_dict(type)}
+      true -> start_server(type)
       false -> {:error, "Invalid type supplied to Dictionary init #{type}"}
     end
   end
@@ -60,6 +86,17 @@ defmodule Wordza.Dictionary do
   end
   def handle_call({:get_all_word_starts, letters}, _from, state) do
     {:reply, Wordza.Dictionary.Helpers.get_all_word_starts(letters, state), state}
+  end
+
+  defp start_server(type) do
+    Cachex.start_link(type, [
+      limit: limit(
+        size: 20_000,
+        policy: Cachex.Policy.LRW,
+        reclaim: 0.1
+      )
+    ])
+    {:ok, Wordza.Dictionary.Helpers.build_dict(type)}
   end
 
 end
@@ -134,11 +171,18 @@ defmodule Wordza.Dictionary.Helpers do
     end
   end
 
-  # clean and normalize letter lookup: only strings, only single letters, upper case
-  defp clean_letters(letters) when is_bitstring(letters) do
+  @doc """
+  clean and normalize letter lookup: only strings, only single letters, upper case
+
+  ## Examples
+
+      iex> Wordza.Dictionary.Helpers.clean_letters(["a", "B", "zz"])
+      ["A", "B"]
+  """
+  def clean_letters(letters) when is_bitstring(letters) do
     letters |> String.split("") |> clean_letters()
   end
-  defp clean_letters(letters) do
+  def clean_letters(letters) do
     letters
     |> Enum.filter(&is_bitstring/1)
     |> Enum.filter(fn(l) -> String.length(l) == 1 end)
