@@ -10,6 +10,7 @@ defmodule Wordza.BotAlec do
       When we choose a play to make
       Then return a GamePlay which is both valid and the highest scoring
   """
+  use Elixometer
   require Logger
   alias Wordza.BotAlec
   alias Wordza.BotBits
@@ -50,6 +51,7 @@ defmodule Wordza.BotAlec do
 
   TODO <-- get from GameInstance
   """
+  @timed(key: :auto)
   def make_play(
     player_key,
     %GameInstance{

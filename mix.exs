@@ -19,6 +19,7 @@ defmodule Wordza.Mixfile do
         :timex,
         :httpoison,
         :cachex,
+        :elixometer,
       ],
       # applications: [:httpoison],
       mod: {Wordza.Application, [

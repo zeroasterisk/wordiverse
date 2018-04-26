@@ -4,6 +4,7 @@ defmodule Wordza.Dictionary do
   We only need 1 dictionary, for all of our Games of each type
   So it is it's own GenServer
   """
+  use Elixometer
   use GenServer
 
   ### Client API
@@ -30,12 +31,15 @@ defmodule Wordza.Dictionary do
   @doc """
   Check if a word is a valid beginning of a term
   """
+  @timed(key: :auto)
   def is_word_start?(pid, letters) do
     GenServer.call(pid, {:is_word_start?, letters})
   end
+  @timed(key: :auto)
   def is_word_full?(pid, letters) do
     GenServer.call(pid, {:is_word_full?, letters})
   end
+  @timed(key: :auto)
   def get_all_word_starts(pid, letters) do
     GenServer.call(pid, {:get_all_word_starts, letters})
   end
