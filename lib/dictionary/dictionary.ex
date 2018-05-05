@@ -13,21 +13,46 @@ defmodule Wordza.Dictionary do
   @doc """
   Easy access to start up the server
 
-  On new:
-    returns {:ok, pid}
-  On repeat:
-    returns {:error, {:already_started, #PID<0.248.0>}}
+  ## Examples
+
+      iex> {:ok, pid} = Wordza.Dictionary.start_link(:mock)
+      iex> is_pid(pid)
+      true
+
+      iex> {:ok, pid} = Wordza.Dictionary.start_link(:mock, :custom_name)
+      iex> is_pid(pid)
+      true
+
+      iex> {:ok, pid} = Wordza.Dictionary.start_link({:clone, :mock}, :custom_name)
+      iex> is_pid(pid)
+      true
+
+
+  returns {:ok, pid}
   """
-  def start_link(type) do
-    out = GenServer.start_link(__MODULE__, type, [
-      name: type,
+  def start_link(type), do: start_link(type, type)
+  def start_link({:clone, type}, name) do
+    out = GenServer.start_link(__MODULE__, {:clone, type}, [
+      name: name,
       timeout: 30_000, # 30 seconds to init or die
     ])
-    out |> start_link_nice()
+    |> start_link_nice()
+  end
+  def start_link(type, name) do
+    out = GenServer.start_link(__MODULE__, type, [
+      name: name,
+      timeout: 30_000, # 30 seconds to init or die
+    ])
+    |> start_link_nice()
   end
   def start_link_nice({:ok, pid}), do: {:ok, pid}
   def start_link_nice({:error, {:already_started, pid}}), do: {:ok, pid}
   def start_link_nice({:error, err}), do: {:error, err}
+
+  @doc """
+  Get the state of the current process
+  """
+  def get(pid), do: GenServer.call(pid, {:get})
 
   # helpers for caching
   # def is_word_cacheable?(letters), do: false
@@ -71,12 +96,19 @@ defmodule Wordza.Dictionary do
   end
 
   ### Server API
+  def init({:clone, type}) do
+    state = GenServer.call(type, {:get})
+    {:ok, state}
+  end
   def init(type) do
     allowed = [:scrabble, :wordfeud, :mock]
     case Enum.member?(allowed, type) do
       true -> start_server(type)
       false -> {:error, "Invalid type supplied to Dictionary init #{type}"}
     end
+  end
+  def handle_call({:get}, _from, state) do
+    {:reply, state, state}
   end
   def handle_call({:is_word_start?, letters}, _from, state) do
     {:reply, Wordza.Dictionary.Helpers.is_word_start?(letters, state), state}

@@ -3,12 +3,51 @@ defmodule GameDictionaryTest do
   doctest Wordza.Dictionary
   doctest Wordza.Dictionary.Helpers
 
+  @mock_disctionary_state %{
+    "A" => %{
+      :EOW => true,
+      "L" => %{
+        "L" => %{
+          :EOW => true
+        },
+        "A" => %{
+          "N" => %{
+            :EOW => true
+          }
+        }
+      }
+    }
+  }
+
   test "basic start_link to get a Dictionary server started" do
     {:ok, pid} = Wordza.Dictionary.start_link(:mock)
     assert is_pid(pid)
     # nicely handle situations where it's already started
     {:ok, pid} = Wordza.Dictionary.start_link(:mock)
     assert is_pid(pid)
+    pid == pid
+    state = Wordza.Dictionary.get(pid)
+    assert is_map(state) == true
+    assert state == @mock_disctionary_state
+  end
+  test "named start_link to get a Dictionary server started (with custom name)" do
+    {:ok, pid} = Wordza.Dictionary.start_link(:mock, :unit_test_1)
+    assert is_pid(pid)
+    # nicely handle situations where it's already started
+    {:ok, pid} = Wordza.Dictionary.start_link(:mock, :unit_test_1)
+    assert is_pid(pid)
+    pid == pid
+    state = Wordza.Dictionary.get(pid)
+    assert is_map(state) == true
+    assert state == @mock_disctionary_state
+  end
+  test "clone an existing Dictionary server started (with custom name)" do
+    {:ok, pid} = Wordza.Dictionary.start_link(:mock, :unit_test_1)
+    assert is_pid(pid)
+    {:ok, pid} = Wordza.Dictionary.start_link({:clone, :mock}, :unit_test_2)
+    assert is_pid(pid)
+    assert Wordza.Dictionary.get(:unit_test_1) == Wordza.Dictionary.get(:unit_test_2)
+    # TO_DO could we assert that this was in fact a clone vs. rebuild?
   end
   test "basic is_word_start? for a mock dictionary" do
     {:ok, pid} = Wordza.Dictionary.start_link(:mock)
@@ -40,23 +79,23 @@ defmodule GameDictionaryHelpersTest do
   use ExUnit.Case
   doctest Wordza.Dictionary.Helpers
 
-  defp mock_dictionary() do
-    %{
-      "A" => %{
-        :EOW => true,
+  @mock_disctionary_state %{
+    "A" => %{
+      :EOW => true,
+      "L" => %{
         "L" => %{
-          "L" => %{
+          :EOW => true
+        },
+        "A" => %{
+          "N" => %{
             :EOW => true
-          },
-          "A" => %{
-            "N" => %{
-              :EOW => true
-            }
           }
         }
       }
     }
-  end
+  }
+
+  defp mock_dictionary(), do: @mock_disctionary_state
 
   test "basic add word to dictionary" do
     dict = %{}
