@@ -126,6 +126,8 @@ defmodule Wordza.Game do
   end
 
   # Fancy name <-> pid refernce library `gproc`
+  defp via_tuple(pid) when is_pid(pid), do: pid
+  defp via_tuple(name) when is_atom(name), do: name
   defp via_tuple(name) do
     {:via, :gproc, {:n, :l, {:wordza_game, name}}}
   end

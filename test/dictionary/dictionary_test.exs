@@ -23,9 +23,9 @@ defmodule GameDictionaryTest do
     {:ok, pid} = Wordza.Dictionary.start_link(:mock)
     assert is_pid(pid)
     # nicely handle situations where it's already started
-    {:ok, pid} = Wordza.Dictionary.start_link(:mock)
-    assert is_pid(pid)
-    pid == pid
+    {:ok, pid2} = Wordza.Dictionary.start_link(:mock)
+    assert is_pid(pid2)
+    assert pid == pid2
     state = Wordza.Dictionary.get(pid)
     assert is_map(state) == true
     assert state == @mock_disctionary_state
@@ -34,9 +34,9 @@ defmodule GameDictionaryTest do
     {:ok, pid} = Wordza.Dictionary.start_link(:mock, :unit_test_1)
     assert is_pid(pid)
     # nicely handle situations where it's already started
-    {:ok, pid} = Wordza.Dictionary.start_link(:mock, :unit_test_1)
-    assert is_pid(pid)
-    pid == pid
+    {:ok, pid2} = Wordza.Dictionary.start_link(:mock, :unit_test_1)
+    assert is_pid(pid2)
+    assert pid == pid2
     state = Wordza.Dictionary.get(pid)
     assert is_map(state) == true
     assert state == @mock_disctionary_state

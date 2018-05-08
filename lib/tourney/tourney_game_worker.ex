@@ -9,6 +9,14 @@ defmodule Wordza.TourneyGameWorker do
   - then end gracefully
   """
   require Logger
+  alias Wordza.TourneyGameConfig
+  alias Wordza.TourneyGameCore
+  alias Wordza.TourneyScheduleWorker
+  alias Wordza.TourneyScheduleConfig
+  alias Wordza.GameInstance
+  alias Wordza.GameLog
+  alias Wordza.Game
+  alias Wordza.Dictionary
   use GenServer
   @loop_delay 1
 
@@ -17,13 +25,13 @@ defmodule Wordza.TourneyGameWorker do
   @doc """
   Start and run a game until complete, then return
   """
-  def play_game(%Wordza.TourneyGameConfig{} = conf) do
+  def play_game(%TourneyGameConfig{} = conf) do
     {:ok, pid} = start_link(conf)
     conf = pid |> complete_game()
     pid |> stop()
     {:ok, conf}
   end
-  def play_game_bg(%Wordza.TourneyGameConfig{} = conf) do
+  def play_game_bg(%TourneyGameConfig{} = conf) do
     {:ok, pid} = start_link(conf)
     pid |> complete_game_bg()
     conf = pid |> get()
@@ -34,7 +42,7 @@ defmodule Wordza.TourneyGameWorker do
   @doc """
   Easy access to start up the server
   """
-  def start_link(%Wordza.TourneyGameConfig{} = conf) do
+  def start_link(%TourneyGameConfig{} = conf) do
     GenServer.start_link(
       __MODULE__,
       conf,
@@ -44,13 +52,13 @@ defmodule Wordza.TourneyGameWorker do
     )
   end
   def start_link(%{} = conf) do
-    conf |> Wordza.TourneyGameConfig.create() |> start_link()
+    conf |> TourneyGameConfig.create() |> start_link()
   end
 
   @doc """
   Get the state of the current process
   """
-  def get(pid), do: GenServer.call(pid, {:get})
+  def get(name), do: name |> via_tuple |> GenServer.call({:get})
 
   @doc """
   Take the next turn and return state
@@ -84,14 +92,19 @@ defmodule Wordza.TourneyGameWorker do
 
   ### Server API
 
-  def init(%Wordza.TourneyGameConfig{
+  def init(%TourneyGameConfig{
     type: type,
     player_1_id: player_1_id,
     player_2_id: player_2_id,
   } = conf) do
-    # Logger.info "TourneyGameWorker.init starting game: #{inspect(type)}, #{inspect(player_1_id)}, #{inspect(player_2_id)}"
+    dictionary_name = GameInstance.build_game_name(type)
+    # IO.puts "---------------------------"
+    # IO.puts "TourneyGameWorker.init starting dictionary: #{inspect(type)} #{inspect(dictionary_name)}"
+    # create a cloned dictionary
+    {:ok, dictionary_pid} = Dictionary.start_link({:clone, type}, dictionary_name)
+    # IO.puts "TourneyGameWorker.init starting game: #{inspect(type)}, #{inspect(player_1_id)}, #{inspect(player_2_id)}"
     # start the game - linked to "monitor" it's messages here
-    {:ok, game_pid} = Wordza.Game.start_link(type, player_1_id, player_2_id)
+    {:ok, game_pid} = Game.start_link(type, player_1_id, player_2_id, dictionary_name)
     # update state with game_pid
     state = Map.merge(conf, %{game_pid: game_pid, tourney_worker_pid: self()})
 
@@ -104,11 +117,11 @@ defmodule Wordza.TourneyGameWorker do
     {:reply, state, state}
   end
   def handle_call({:next}, _from, state) do
-    {:ok, state} = Wordza.TourneyGameCore.next(state)
+    {:ok, state} = TourneyGameCore.next(state)
     {:reply, state, state}
   end
   def handle_call({:complete_game}, _from, state) do
-    {:ok, state} = Wordza.TourneyGameCore.complete(state)
+    {:ok, state} = TourneyGameCore.complete(state)
     {:reply, state, state}
   end
 
@@ -147,7 +160,7 @@ defmodule Wordza.TourneyGameWorker do
   # def handle_info(:timeout, state) do
   #   Logger.warn "TourneyGameWorker.handle_info :timeout #{inspect(state)}"
   #   Process.send_after(self(), :timeout, 10)
-  #   {:ok, state} = Wordza.TourneyGameCore.next(state)
+  #   {:ok, state} = TourneyGameCore.next(state)
   #   {:noreply, state}
   # end
 
@@ -200,14 +213,14 @@ defmodule Wordza.TourneyGameWorker do
   Take the next turn in a game and return state
   or return state with done=true if game is over
   """
-  def run_next_step(%Wordza.TourneyGameConfig{done: true} = state) do
+  def run_next_step(%TourneyGameConfig{done: true} = state) do
     # Logger.info "TourneyGameWorker.loop(info) about to stop self"
     onsuccess(state)
     GenServer.stop(self())
     state
   end
-  def run_next_step(%Wordza.TourneyGameConfig{} = state) do
-    {:ok, state} = Wordza.TourneyGameCore.next(state)
+  def run_next_step(%TourneyGameConfig{} = state) do
+    {:ok, state} = TourneyGameCore.next(state)
     state
   end
 
@@ -215,7 +228,7 @@ defmodule Wordza.TourneyGameWorker do
     case Process.alive?(pid) do
       true ->
         # Logger.info "TourneyGameWorker.unregister_scheduler about to call unregister_worker"
-        Wordza.TourneyScheduleWorker.unregister_worker(pid, self_pid)
+        TourneyScheduleWorker.unregister_worker(pid, self_pid)
         state
       false ->
         Logger.warn "TourneyGameWorker.unregister_scheduler #{reason} abort - already dead"
@@ -232,7 +245,7 @@ defmodule Wordza.TourneyGameWorker do
     state
   end
 
-  def terminate_game(%Wordza.TourneyGameConfig{game_pid: pid} = _state, reason) do
+  def terminate_game(%TourneyGameConfig{game_pid: pid} = _state, reason) do
     case Process.alive?(pid) do
       true ->
         # Logger.info "TourneyGameWorker.terminate_game about to stop game"
@@ -247,7 +260,7 @@ defmodule Wordza.TourneyGameWorker do
     case Process.alive?(pid) do
       true ->
         # Logger.info "TourneyGameWorker.tourney_done_in_scheduler about to call tourney_done"
-        Wordza.TourneyScheduleWorker.tourney_done(pid, self_pid)
+        TourneyScheduleWorker.tourney_done(pid, self_pid)
         state
       false ->
         Logger.warn "TourneyGameWorker.tourney_done_in_scheduler abort - already dead"
@@ -264,15 +277,22 @@ defmodule Wordza.TourneyGameWorker do
     state
   end
 
-  def tourney_done_logger(%Wordza.TourneyGameConfig{game_pid: pid} = state) do
+  def tourney_done_logger(%TourneyGameConfig{game_pid: pid} = state) do
     case Process.alive?(pid) do
       true ->
         # Logger.info "TourneyGameWorker.tourney_done_logger about to log game"
-        Wordza.Game.get(pid, :full) |> Wordza.GameLog.write(state)
+        Game.get(pid, :full) |> GameLog.write(state)
       false ->
         Logger.warn "TourneyGameWorker.tourney_done_logger abort - game is dead #{inspect(pid)}"
     end
     state
+  end
+
+  # Fancy name <-> pid refernce library `gproc`
+  defp via_tuple(pid) when is_pid(pid), do: pid
+  defp via_tuple(name) when is_atom(name), do: name
+  defp via_tuple(name) do
+    {:via, :gproc, {:n, :l, {:wordza_tourney_game_worker, name}}}
   end
 
 end

@@ -5,6 +5,7 @@ defmodule Wordza.GameInstance do
   defstruct [
     name: nil,
     type: nil,
+    dictionary_name: nil,
     board: nil,
     tiles_in_pile: nil,
     player_1: nil,
@@ -49,6 +50,7 @@ defmodule Wordza.GameInstance do
     %GameInstance{
       name: name,
       type: :mock,
+      dictionary_name: :mock,
       board: GameBoard.create(:mock),
       tiles_in_pile: GameTiles.create(:mock),
       player_1: player_1,
@@ -59,9 +61,14 @@ defmodule Wordza.GameInstance do
     }
   end
   def create(type, player_1_id, player_2_id, name) do
+    create(type, player_1_id, player_2_id, name, type)
+  end
+  def create(type, player_1_id, player_2_id, name, dictionary_name) do
+    # TO_DO refactor - 5 positional args?  ugly
     %GameInstance{
       name: name,
       type: type,
+      dictionary_name: dictionary_name,
       board: GameBoard.create(type),
       tiles_in_pile: GameTiles.create(type),
       player_1: GamePlayer.create(player_1_id),

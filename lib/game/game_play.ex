@@ -34,6 +34,7 @@ defmodule Wordza.GamePlay do
   5. verify: letters do not overlap any letters on board
   6. verify: letters + board form full words
   """
+  use Elixometer
   require Logger
   alias Wordza.GamePlay
   alias Wordza.GameBoard
@@ -672,20 +673,21 @@ defmodule Wordza.GamePlay do
   ## Examples
 
       iex> Wordza.Dictionary.start_link(:mock)
-      iex> game = %Wordza.GameInstance{type: :mock}
+      iex> game = %Wordza.GameInstance{dictionary_name: :mock}
       iex> word = [%{letter: "A"}, %{letter: "L"}, %{letter: "L"}]
       iex> Wordza.GamePlay.verify_word_full(game, word)
       true
 
       iex> Wordza.Dictionary.start_link(:mock)
-      iex> game = %Wordza.GameInstance{type: :mock}
+      iex> game = %Wordza.GameInstance{dictionary_name: :mock}
       iex> word = [%{letter: "A"}, %{letter: "L"}]
       iex> Wordza.GamePlay.verify_word_full(game, word)
       false
   """
-  def verify_word_full(%GameInstance{type: type}, word) do
+  @timed(key: :auto)
+  def verify_word_full(%GameInstance{dictionary_name: dictionary_name}, word) do
     word = Enum.map(word, fn(%{letter: l}) -> l end)
-    Dictionary.is_word_full?(type, word) == :ok
+    dictionary_name |> Dictionary.is_word_full?(word) == :ok
   end
 
   @doc """
@@ -695,26 +697,27 @@ defmodule Wordza.GamePlay do
   ## Examples
 
       iex> Wordza.Dictionary.start_link(:mock)
-      iex> game = %Wordza.GameInstance{type: :mock}
+      iex> game = %Wordza.GameInstance{dictionary_name: :mock}
       iex> word = [%{letter: "A"}, %{letter: "L"}, %{letter: "L"}]
       iex> Wordza.GamePlay.verify_word_start(game, word)
       true
 
       iex> Wordza.Dictionary.start_link(:mock)
-      iex> game = %Wordza.GameInstance{type: :mock}
+      iex> game = %Wordza.GameInstance{dictionary_name: :mock}
       iex> word = [%{letter: "A"}, %{letter: "L"}]
       iex> Wordza.GamePlay.verify_word_start(game, word)
       true
 
       iex> Wordza.Dictionary.start_link(:mock)
-      iex> game = %Wordza.GameInstance{type: :mock}
+      iex> game = %Wordza.GameInstance{dictionary_name: :mock}
       iex> word = [%{letter: "J"}, %{letter: "J"}]
       iex> Wordza.GamePlay.verify_word_start(game, word)
       false
   """
-  def verify_word_start(%GameInstance{type: type}, word) do
+  @timed(key: :auto)
+  def verify_word_start(%GameInstance{dictionary_name: dictionary_name}, word) do
     word = Enum.map(word, fn(%{letter: l}) -> l end)
-    Dictionary.is_word_start?(type, word) == :ok
+    dictionary_name |> Dictionary.is_word_start?(word) == :ok
   end
 
 end

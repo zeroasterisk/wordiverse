@@ -51,7 +51,7 @@ defmodule Wordza.TourneyScheduleWorker do
                  |> Map.merge(%{
                    name: :basic_test_small,
                    number_of_games: 10,
-                   number_in_parallel: 2,
+                   number_in_parallel: 10,
                  })
                  |> start_link()
     # pid |> complete()
