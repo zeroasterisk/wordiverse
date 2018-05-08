@@ -32,16 +32,16 @@ defmodule Wordza.Dictionary do
   """
   def start_link(type), do: start_link(type, type)
   def start_link({:clone, type}, name) do
-    out = GenServer.start_link(__MODULE__, {:clone, type}, [
-      name: name,
+    GenServer.start_link(__MODULE__, {:clone, type}, [
       timeout: 30_000, # 30 seconds to init or die
+      name: via_tuple(name), # named dictionary (optionally eaiser to lookup)
     ])
     |> start_link_nice()
   end
   def start_link(type, name) do
-    out = GenServer.start_link(__MODULE__, type, [
-      name: name,
+    GenServer.start_link(__MODULE__, type, [
       timeout: 30_000, # 30 seconds to init or die
+      name: via_tuple(name), # named dictionary (optionally eaiser to lookup)
     ])
     |> start_link_nice()
   end
@@ -54,36 +54,11 @@ defmodule Wordza.Dictionary do
   """
   def get(pid), do: GenServer.call(pid, {:get})
 
-  # helpers for caching
-  # def is_word_cacheable?(letters), do: false
-  def is_word_cacheable?(letters), do: Enum.count(letters) < 4
-
-
-
   @doc """
   Check if a word is a valid beginning of a term
   """
   @timed(key: :auto)
   def is_word_start?(pid, letters) do
-    letters = Wordza.Dictionary.Helpers.clean_letters(letters)
-    case is_word_cacheable? letters do
-      true -> cached_is_word_start?(pid, letters)
-      false -> server_is_word_start?(pid, letters)
-    end
-
-  end
-  def cached_is_word_start?(pid, letters) do
-    key = letters |> Enum.join ""
-    case Cachex.get(pid, key) do
-      {:ok, val} -> val
-      _ ->
-        val = server_is_word_start?(pid, key)
-        Cachex.put(pid, key, val)
-        val
-    end
-  end
-  @timed(key: :auto)
-  def server_is_word_start?(pid, letters) do
     GenServer.call(pid, {:is_word_start?, letters})
   end
   @timed(key: :auto)
@@ -96,8 +71,9 @@ defmodule Wordza.Dictionary do
   end
 
   ### Server API
-  def init({:clone, type}) do
-    state = GenServer.call(type, {:get})
+  def init({:clone, name}) do
+    pid = name |> via_tuple()
+    state = GenServer.call(pid, {:get})
     {:ok, state}
   end
   def init(type) do
@@ -131,12 +107,20 @@ defmodule Wordza.Dictionary do
     {:ok, Wordza.Dictionary.Helpers.build_dict(type)}
   end
 
+  # Fancy name <-> pid refernce library `gproc`
+  defp via_tuple(pid) when is_pid(pid), do: pid
+  defp via_tuple(name) when is_atom(name), do: name
+  defp via_tuple(name) do
+    {:via, :gproc, {:n, :l, {:wordza_dictionary, name}}}
+  end
+
 end
 
 defmodule Wordza.Dictionary.Helpers do
   @moduledoc """
   Internal Helper functions for the Dictionary module
   """
+  use Elixometer
 
   @doc """
   Builds a full dictionary map, from a source text file
@@ -253,20 +237,74 @@ defmodule Wordza.Dictionary.Helpers do
   end
 
   @doc """
+  Find all possible word_starts for a list of letter_sets
+
+  If you had no blanks, the letter_sets from your tray would be 1
+  If you had 1 blank, the letter_sets from your tray would be 26
+  If you had 2 blanks, the letter_sets from your tray would be 351
+
+  351 is death...
+  because we calculate every permutation of every combination of letters
+
+  """
+  def get_all_word_starts_for_letter_sets(letter_sets, dict) do
+    IO.puts "get_all_word_starts_for_letter_sets not built yet"
+  end
+
+  @doc """
   Find all possible word_starts for a list of letters
 
   NOTE this may be expensive, 7! = 5040 (but is usually not that bad)
 
   NOTE this doesn't work with blanks...
   """
+  @timed(key: :auto)
   def get_all_word_starts(letters, dict) do
+    # convert a list of letters into letter_sets
     letters
     |> clean_letters()
     |> Enum.slice(0, 12)
+    # should have a single letter_set here (max 12 length)
     |> Comb.permutations()
     |> Enum.to_list()
-    |> Enum.map(fn(l) -> starts_with_lookup(l, dict) end)
+    # should have a variety of letter_sets here
+    |> get_all_word_starts_explode()
+    # should have a wild variety of letter_sets here
+    |> Enum.sort()
     |> Enum.uniq()
+    |> Enum.map(fn(l) -> starts_with_lookup(l, dict) end)
     |> Enum.filter(fn(l) -> Enum.count(l) > 0 end)
+    |> Enum.sort()
+    |> Enum.uniq()
+    |> get_all_word_starts_explode()
+    |> Enum.sort()
+    |> Enum.uniq()
   end
+
+  @doc """
+  Ensure we have every possible "start" path for every word_start
+
+  ## Examples
+
+      iex> word_starts = [["A"], ["A", "L", "L"]]
+      iex> Wordza.Dictionary.Helpers.get_all_word_starts_explode(word_starts)
+      [["A"], ["A", "L"], ["A", "L", "L"]]
+  """
+  def get_all_word_starts_explode(word_starts) do
+    word_starts
+    |> Enum.reduce(word_starts, fn(word_start, acc) ->
+      word_start
+      |> Enum.reverse()
+      |> get_all_word_starts_exploder(acc)
+    end)
+    |> Enum.filter(fn(l) -> Enum.count(l) > 0 end)
+    |> Enum.sort()
+    |> Enum.uniq()
+  end
+  def get_all_word_starts_exploder([], acc), do: acc
+  def get_all_word_starts_exploder([letter | word_start_reversed], acc) do
+    word_start = word_start_reversed |> Enum.reverse()
+    get_all_word_starts_exploder(word_start_reversed, [word_start | acc])
+  end
+
 end
