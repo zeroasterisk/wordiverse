@@ -9,6 +9,7 @@ defmodule Wordza.BotBits do
   """
   alias Wordza.GameBoard
   alias Wordza.GameTiles
+  alias Wordza.Dictionary
 
   @doc """
   Is the y+x a possible start on the board?
@@ -147,30 +148,141 @@ defmodule Wordza.BotBits do
           ["A", "L", "L"],
       ]
   """
-  def get_all_word_starts(_, nil), do: raise "BotBits.get_all_word_starts must have a game.type"
-  def get_all_word_starts(letters, type) when is_list(letters) and is_atom(type) do
-    letters = GameTiles.clean_letters(letters)
+  def get_all_word_starts(letters, dictionary_name) when is_list(letters) and is_atom(dictionary_name) do
+    letters = letters |> GameTiles.clean_letters() |> Enum.sort()
     case Enum.member?(letters, "?") do
       false ->
-        type
-        |> Wordza.Dictionary.get_all_word_starts(letters)
-        |> Enum.uniq()
+        dictionary_name
+        |> Dictionary.get_all_word_starts(letters)
         |> Enum.sort()
+        |> Enum.uniq()
       true ->
-        words = Wordza.Dictionary.get_all_word_starts(type, letters)
+        # TODO REFACTOR optimize this guy!
         letters
-        |> Enum.filter(fn(l) -> l == "?" end)
-        |> expand_blanks()
-        |> Enum.reduce(
-          words,
-          fn(letter, words) ->
-            Wordza.Dictionary.get_all_word_starts(type, [letter | letters])
-            ++ words
-          end
-        )
-        |> Enum.uniq()
-        |> Enum.sort()
+        |> letter_combos()
+        # If you had no blanks, the letter_sets from your tray would be 1
+        # If you had 1 blank, the letter_sets from your tray would be 26
+        # If you had 2 blanks, the letter_sets from your tray would be 351
+        # double-blanks = DEATH!!!
+        #   reducing length of letter_sets based on count
+        |> get_all_word_starts_limit()
+        # TODO REFACTOR - sent all letter_sets to Dictionary as 1 (big) call
+        |> Enum.reduce([], fn(letter_set, words) ->
+          words_this = dictionary_name |> Dictionary.get_all_word_starts(letter_set)
+          words = words ++ words_this
+          words
+          |> Enum.sort()
+          |> Enum.uniq()
+        end)
     end
+  end
+  def get_all_word_starts(_, dictionary_name) when is_bitstring(dictionary_name) do
+    raise "BotBits.get_all_word_starts must have a game.dictionary_name as an atom, not a string"
+  end
+  def get_all_word_starts(_, _) do
+    raise "BotBits.get_all_word_starts must have a game.dictionary_name"
+  end
+
+  def get_all_word_starts_limit(letter_sets) do
+    get_all_word_starts_limit(letter_sets, letter_sets |> Enum.count())
+  end
+  def get_all_word_starts_limit(letter_sets, c) when c < 20, do: letter_sets
+  def get_all_word_starts_limit(letter_sets, c) when c < 40 do
+    letter_sets
+    |> Enum.map(fn(letter_set) -> letter_set |> Enum.take(6) end)
+    |> Enum.sort()
+    |> Enum.uniq()
+  end
+  def get_all_word_starts_limit(letter_sets, c) when c < 90 do
+    letter_sets
+    |> Enum.map(fn(letter_set) -> letter_set |> Enum.take(4) end)
+    |> Enum.sort()
+    |> Enum.uniq()
+  end
+
+  @doc """
+  If a set of letters has a blank,
+  expand the blank into every possible value
+  and mix into the non-blank letters (every possible) combination
+  (sorted, unique)
+
+      Wordza.BotBits.letter_combos(["A", "C", "B", "?"])
+      [["A", "A", "B", "C"], ["A", "B", "B", "C"], ...]
+
+  ## Examples
+
+      iex> Wordza.BotBits.letter_combos(["A", "B", "C"])
+      [["A", "B", "C"]]
+
+      iex> Wordza.BotBits.letter_combos(["A", "C", "B"])
+      [["A", "B", "C"]]
+
+      iex> Wordza.BotBits.letter_combos(["A", "C", "B", "?"]) |> Enum.count()
+      26
+
+      iex> Wordza.BotBits.letter_combos(["A", "C", "B", "?"]) |> List.first()
+      ["A", "A", "B", "C"]
+
+      iex> Wordza.BotBits.letter_combos(["A", "C", "B", "?"]) |> List.last()
+      ["A", "B", "C", "Z"]
+
+      iex> Wordza.BotBits.letter_combos(["A", "?", "B", "?"]) |> Enum.count()
+      351
+
+      iex> Wordza.BotBits.letter_combos(["A", "?", "B", "?"]) |> List.first()
+      ["A", "A", "A", "B"]
+
+      iex> Wordza.BotBits.letter_combos(["A", "?", "B", "?"]) |> List.last()
+      ["A", "B", "Z", "Z"]
+
+  """
+  def letter_combos(letters) do
+    blank_count = letters |> Enum.filter(fn(l) -> l == "?" end) |> Enum.count()
+    letter_set = letters
+                 |> Enum.filter(fn(l) -> l != "?" end)
+                 |> Enum.sort()
+
+    [letter_set] |> letter_combos(blank_count)
+  end
+  def letter_combos(letter_sets, 0 = _blank_count) do
+    letter_sets
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+  def letter_combos(letter_sets, blank_count) when blank_count > 0 do
+    letter_sets
+    |> Enum.reduce([], &letter_combo/2)
+    |> letter_combos(blank_count - 1)
+  end
+
+  @doc """
+  Expand a single blank into a set of letters,
+  making 26 new sets of letters
+
+  ## Examples
+
+      iex> Wordza.BotBits.letter_combo(["A", "B", "C"], []) |> List.first()
+      ["A", "A", "B", "C"]
+
+      iex> Wordza.BotBits.letter_combo(["A", "B", "C"], []) |> List.last()
+      ["A", "B", "C", "Z"]
+
+      iex> Wordza.BotBits.letter_combo(["A", "B", "C"], []) |> Enum.count()
+      26
+
+      iex> Wordza.BotBits.letter_combo(["A", "B", "C"], [["X"]]) |> Enum.count()
+      27
+
+      iex> Wordza.BotBits.letter_combo(["A", "B", "C"], [["X"]]) |> List.last()
+      ["X"]
+
+  """
+  def letter_combo(letters, letter_sets) do
+    expand_blank("?", [])
+    |> Enum.reduce(letter_sets, fn(letter, letter_sets) ->
+      letter_set = [letter | letters] |> Enum.sort()
+      [letter_set | letter_sets]
+    end)
   end
 
   @doc """
@@ -198,6 +310,7 @@ defmodule Wordza.BotBits do
     ]
   end
   defp expand_blank(letter, acc), do: [letter | acc]
+
 
   @doc """
   Given a start_yx determine length of word_start until played tile in the "y" direction

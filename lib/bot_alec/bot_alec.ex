@@ -22,6 +22,7 @@ defmodule Wordza.BotAlec do
 
   defstruct [
     player_key: :player_1,
+    dictionary_name: nil,
     type: nil,
     tiles_in_tray: nil,
     word_starts: [],
@@ -57,6 +58,7 @@ defmodule Wordza.BotAlec do
     %GameInstance{
       board: board,
       type: type,
+      dictionary_name: dictionary_name,
     } = game
   ) when is_atom(player_key) do
     player = game |> Map.get(player_key)
@@ -67,6 +69,7 @@ defmodule Wordza.BotAlec do
       player_key: player_key,
       tiles_in_tray: tiles_in_tray,
       type: type,
+      dictionary_name: dictionary_name,
       board: board,
       total_y: total_y,
       total_x: total_x,
@@ -87,11 +90,16 @@ defmodule Wordza.BotAlec do
   defp assign_start_yxs(%BotAlec{board: board, tiles_in_tray: tiles_in_tray} = bot) do
     bot |> Map.merge(%{start_yxs: BotBits.get_all_start_yx(board, tiles_in_tray)})
   end
-  defp assign_word_starts(%BotAlec{type: type, tiles_in_tray: tiles_in_tray} = bot) do
-    bot |> Map.merge(%{word_starts: BotBits.get_all_word_starts(tiles_in_tray, type)})
+  defp assign_word_starts(%BotAlec{
+    dictionary_name: dictionary_name,
+    tiles_in_tray: tiles_in_tray
+  } = bot) do
+    bot |> Map.merge(%{word_starts: BotBits.get_all_word_starts(tiles_in_tray, dictionary_name)})
   end
   defp assign_all_plays(%BotAlec{} = bot, %GameInstance{} = game) do
-    bot |> Map.merge(%{plays: BotPlayMaker.create_all_plays(game, bot)})
+    bot |> Map.merge(%{
+      plays: BotPlayMaker.create_all_plays(game, bot),
+    })
   end
   defp choose_play(%BotAlec{plays: []} = _bot) do
     {:pass, nil}
